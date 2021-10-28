@@ -20,7 +20,7 @@ def cargar_datos_pacientes(name_excel):
 
     ### un paciente
 
-    datos = pd.read_excel(name_excel, sheet_name=0) #abrir excel, página 0
+    datos = pd.read_excel(name_excel, sheet_name=1) #abrir excel, página 1 dnd ta fig 3a
     df_datos = pd.DataFrame(datos) # Formato para trabajar cn los datos
     # DataFrame is a 2-dimensional labeled data structure
 
@@ -59,7 +59,7 @@ def cargar_datos_pacientes(name_excel):
     #print(f'lista_tupla_aux FUERA\n {lista_tuplas_aux}')
 
     tiempo_aux.sort() #ordena del tiempo en forma ascendente
-    print(f'tiempo_aux {tiempo_aux}')
+
     lista_tuplas = []
     for t_aux in tiempo_aux:
         for par in lista_tuplas_aux:
