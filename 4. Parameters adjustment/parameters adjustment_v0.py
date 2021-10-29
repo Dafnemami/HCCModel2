@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 from lmfit import minimize, Parameters, report_fit
 from scipy.integrate import solve_ivp
 from L_count_temporal import L_count # P. TEMPORAL
+from cargar_datos_pacientes import cargar_datos_pacientes
+
+
 '''
 Hay dos formas para resolver edos de esa libreria:
  (1) odeint -> más vieja
@@ -12,7 +15,7 @@ Hay dos formas para resolver edos de esa libreria:
 
 ## FLUJO
 #Definimos la función que le entrega el lado derecho de cada EDO, de un sistema
-# de EDO's de primer orden, a solve_ivp
+# de EDO's de primer orden, a solve_ivp.
 #(Esto ya lo había hecho en el código ppal, ahora le agregaré manejo de excepciones xq
 # si y le pediré q reciba los parámetros a ajustar como objetos de clase Parameters)
 
@@ -33,18 +36,23 @@ def rhs(t, y, parametros): # LISTA
     # parámetros = a ajustar como objetos de clase Parameters
     """
 
+    # P. ESTÁN LLEGANDO 5 VALORES ACÁ.
+    print(y)
     T_count, L_count, M_count, I_count = y      # variables
     "obs: C.I.'s vienen cmo un array"
 
+
     try:                                        # parámetros a ajustar
-        omega_1 = parametros['omega_1'].value
         omega_2 = parametros['omega_2'].value
         omega_3 = parametros['omega_3'].value
         g = parametros['g'].value
         s = parametros['s'].value
         #alpha_T = parametros['alpha_T'].value
-        #alpha_L = parametros['alpha_L'].value
-            #obs: alpha_T & alpha_L aparecen solo en la parte de radiación
+
+        #omega_1 = parametros['omega_1'].value GRID SEARCH
+        #alpha_L = parametros['alpha_L'].value GRID SEARCH
+
+           #obs: alpha_T & alpha_L aparecen solo en la parte de radiación
             # así q no los ocuparé por ahora (?)
 
     except KeyError: # uso incorrecto o inválido de llaves (keys) en diccionarios
@@ -64,9 +72,10 @@ def rhs(t, y, parametros): # LISTA
 
     dydt = np.array([T_dot, L_dot, M_dot, I_dot])
 
+    # Este output no puede cambiarse.
     return dydt
 
-# P. Incluir efectos radiación sobre conteo de células.
+
 
 
 ## Solución de la EDO para UN t
@@ -79,9 +88,14 @@ def sol_ode_en_t(t, y0, parametros): # y(t)
     # obs:
     # ANTES -> y0 = np.array([T,L,M,I]) #Condiciones iniciales
     # -> AHORA SE LA ENTREGAMOS A LA FX 'sol_ode_en_t' CMO ARGUMENTO
+    print(t)
+    print(type(t))
+    # P. ESTÁ ENTRANDO EL ARRAY COMPLETO DEL TIEMPO ACÁ!!
 
-    sol = solve_ivp(rhs, (t,t+1), y0, t_eval = np.array([t+1]), max_step = 0.001,
-                    args=(parametros,))
+    sol = solve_ivp(rhs, (1,1+1), y0, t_eval = np.array([1+1]), max_step = 0.001, args=(parametros,))
+    #print(sol)
+    print(sol)
+
         #LO NUEVO -> 'args=(parametros,)'
     #t_eval = t, q me entrega, en q se evalua edo (puede evaluar en más puntos, xq eso lo define
     # inteligentemente solve_ivp internamente, solo q no me los entrega); ese t tiene q estar
@@ -89,6 +103,11 @@ def sol_ode_en_t(t, y0, parametros): # y(t)
     # en t_eval.
     #Devuelve sol.y -> array [[T][L][M][I]]) , sol.t -> array [t]
 
+
+    # P. Aquí actualizar "sol" cn la influencia de la rad.
+
+
+    # P. solo me tgo q preocupar q se retorne lo que pide el resto del código
     return sol
 
 
@@ -100,8 +119,8 @@ def residuo(parametros, t, data):
     """
 
     # Le entrego los valores iniciales como objeto Parameters fijo (fixed value)
-    y0 = (parametros['omega_1'].value, parametros['omega_2'].value, parametros['omega_3'].value,
-          parametros['g'].value, parametros['s'].value)
+    y0 = parametros['omega_1'].value, parametros['omega_2'].value, parametros['omega_3'].value,\
+         parametros['g'].value, parametros['s'].value
 
     # Defino el modelo matemático de los datos (antes: f(x) = x**2 por ejemplo. ahora: ODE's)
     model = sol_ode_en_t(t, y0, parametros)
@@ -129,18 +148,19 @@ T0 = 1.07 * 10 ** 11
 L0 = 5.61 * 10 ** 9
 M0 = 1.07 * 10 ** 8    # Patient with metastasis
 I0 = 0                 # T deaths = 0 at the beginning
-y0 = np.array([T0, L0, M0, I0]) # ocupo array xq solve ivp pide un array para las C.I.
+y0 = np.array([T0, L0, M0, I0]) # ocupo array xq solve ivp pide un array para las C.I.}
 
 
 # 2. measured data(data to be fitted) + plot de data
-    # Data centro de cancer UC -> PENDIENTE
+    # - FORMATO: ARRAY.
+    # Data centro de cancer UC -> PENDIENTE -> Cir.L levels in blood during & after radiothe.
 
-    # temporal: datos inventados.
-t_medido = np.linspace(0, 100, 101) # 101 números entre 0 y 100 igualmente espaciados.
-y_medido_L = L_count # en realidad esto es lo fitted.
+    # temporal: datos de sung. - FORMATO: ARRAY
+t_medido, y_medido_L = cargar_datos_pacientes("Sung figs 3 digitalized points.xlsx")
+#print(type(t_medido))
+#print(type(y_medido_L))
 
-
-#plt.figure() -> ? NO SÉ K HACE ESTO
+plt.figure() # -> ? NO SÉ K HACE ESTO
 plt.scatter(t_medido, y_medido_L, marker='o', color='b', label='measured data', s=30)
     #plt.scatter -> A scatter plot of y vs. x with varying marker size and/or color.
     # Se hace para ver en el plot la data REAL junto cn la fitter q estamos buscando
@@ -152,45 +172,56 @@ plt.scatter(t_medido, y_medido_L, marker='o', color='b', label='measured data', 
 v_parametros = Parameters() #variable parametros, así no se cambia su nombre en las fxnes.
     #Guarda los parámetros y luego lo llamas cmo un dict
 
-# añadimos las C.I. como parámetros fijos (FIXED)
+# Añadimos las C.I. como parámetros fijos (FIXED)
 v_parametros.add('T0', value = T0, vary = False) # FIXED PARAMETER -> vary = False
 v_parametros.add('L0', value = L0, vary = False)
 v_parametros.add('M0', value = L0, vary = False)
 v_parametros.add('I0', value = L0, vary = False)
-# añadimos los parámetros a ajustar (i.e. vamos a encontrar su valor)
-v_parametros.add('omega_1', value = 1, min=1, max=2)
-v_parametros.add('omega_2', value = 1, min=1, max=2)
-v_parametros.add('omega_3', value = 1, min=1, max=2)
-v_parametros.add('g', value = 1, min=1, max=2)
-v_parametros.add('s', value = 1, min=1, max=2)
-# ? -> q valor les voy a dar y cmo los voy a restringir.
+# Añadimos los parámetros a ajustar EN ESTE CICLO (i.e. vamos a encontrar su valor)
+v_parametros.add('omega_1', value = 1, min=10 **(-3), max=10)
+v_parametros.add('omega_2', value = 1, min=10 **(-3), max=10)
+v_parametros.add('omega_3', value = 1, min=10 **(-3), max=10)
+v_parametros.add('g', value = 1, min=10 ** 8, max=10 ** 14)
+v_parametros.add('s', value = 1, min=0, max=10 ** 14) # P. constraits los inventé
+
 
 
 
 # 4. instanciamos a minimize qn toma una fx objetivo y calcula el array a ser minimizado
     # retona -> objeto MinimizerResult
 
-    #resultado = minimize(residuo, v_parametros, args=(t_medido, y_data), method='powell')
+resultado = minimize(residuo, v_parametros, args=(t_medido, y_medido_L), method='powell')
+print(t_medido)
+print(type(t_medido))
 
-# obs: t_medido & y_data es la DATA q yo tgo -> q aún no la tgo definita antes.
+    # t_medido & y_medido_L es la DATA q yo tgo (por ahora lo del paper)
+    # residio tiene el modelo : edo's + P. radiación
 
+'''
+A la clase 'minimize' (recordar q hay otra q se llama Minimize)
+le entrego el residuo a minimizar, los parámetros a definir y la data q tgo. 
+
+Así tmbn le tengo que pedir cn q MÉTODO ENCONTRARÁ los valores de los parámetros q busco definir
+'''
 
 
 # 5. # check results of the fit -> ocupo 'resultado' q se obtuvo ocupando clase 'minimize'
 
-    #fitted_data = sol_ode_en_t(t_medido, y0, resultado.v_parametros)
+fitted_data = sol_ode_en_t(t_medido, y0, resultado.v_parametros)
 
 # obs: '9.' es un float
-# ? -> no toy segura sobre 'resultado.v_parametros'
 
 
-# 6. Plot fitter data
-    #plt.plot(t_medido, fitted_data[:, 1], '-', linewidth=2, color='red', label='fitted data')
+
+
+# 6. Plot fitted data
+plt.plot(t_medido, fitted_data[:, 1], '-', linewidth=2, color='red', label='fitted data')
 plt.legend()
 
 
+
 # 7 # display fitted statistics
-    #report_fit(resultado) # arroja un printeable q me describe muchas cosas sobre el fit
+report_fit(resultado) # arroja un printeable q me describe muchas cosas sobre el fit
 
 
 ######

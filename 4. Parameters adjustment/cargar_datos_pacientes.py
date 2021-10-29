@@ -74,7 +74,8 @@ def cargar_datos_pacientes(name_excel):
     #print(lista_tuplas)
     #print(len(lista_tuplas))
 
-    return tiempo, datos
+    # Necesito retornar los datos en formato de array:
+    return np.array(tiempo), np.array(datos)
 
 
 
