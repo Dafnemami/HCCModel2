@@ -98,10 +98,6 @@ def sol_ode_en_t(t, y0, parametros): # y(t)
 
     #print(f't: {t}') # tipo  <class 'numpy.ndarray'>
 
-    # P. ESTÁ ENTRANDO EL ARRAY COMPLETO DEL TIEMPO ACÁ!!
-    # P. solución: PUEDO EVALUAR ESTA WEA CN UN FOR Y EL RESULTADO, SOLO DE LOS LINFOCITOS,
-    # LOS DEVUELVO TAL CMO LO HARÍA ODEINT.
-        # sol de linfocitos se obtiene con : 'sol.y[1]'
 
     # FLUJO:
     # Recibimos un 't' que es un array de shape = (83,)
@@ -114,15 +110,19 @@ def sol_ode_en_t(t, y0, parametros): # y(t)
             sol = solve_ivp(rhs, (t[i], t[i+1]), y0, t_eval = np.array([t[i+1]]),
                             max_step = 0.001, args = (parametros, ))
         # solve_ivp arroja muchas cosas cmo un reporte general
-        # P. entonces tgo q sacar solo lo q me interesa, L, y agregarlo al array
             aux_sol_y_model = np.array([ sol.y[0][0], sol.y[1][0], sol.y[2][0], sol.y[3][0] ])
             sol_y_model = np.append(sol_y_model, aux_sol_y_model)
         # No entiendo xq sol_y_model queda como un array enorme sin sub arrays de 4 elementos
         # si cuando imprimo sol.y se ve bn.
+        # P. VOY A SEGUIR TENIENDO EL PROBLEMA CON y_model SI NO ARREGLO ESTO PRIMERO.
         #print(f'sol.y: {sol.y}')
     #print(sol)
     print(f'sol_y_model: {sol_y_model}')
 
+    ####### IMPORTANTE CUANDO VUELVAS A TRABAJAR EN EL CÓDIGO.
+    # obs: SOLUCIÓN ALTERNATIVA.
+        # Hacer derechamente el array solo de L y no hacer la tontera del y_model q me
+        # está molestando.
 
     ########SOBRE solve_ivp #####################################
     #LO NUEVO -> 'args=(parametros,)'
