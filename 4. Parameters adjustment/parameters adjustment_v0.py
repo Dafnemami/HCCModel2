@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from lmfit import minimize, Parameters, report_fit
 from scipy.integrate import solve_ivp
-from L_count_temporal import L_count # P. TEMPORAL
 from cargar_datos_pacientes import cargar_datos_pacientes
 
 
@@ -22,11 +21,18 @@ Hay dos formas para resolver edos de esa libreria:
 
 ## PARÁMETROS OBTENIDOS DE LA LITERATURA (4, fixed):
 a = .01  ##[days**-1] #Tumor growth
-alpha_T = .139  ##[Gy**-1] #tumor-LQ(linear quadratic) cell kill
+
+
+## alpha_T por ahora es un valor q obtenemos en HCC data. Se define al ppio.
+    # Este luego se ajusta cn GRID SEARCH
+alpha_T = .037  ##[Gy**-1] #tumor-LQ(linear quadratic) cell kill
+
+
 beta_T = alpha_T/14.3  ##[Gy**-2]
 f = .033 ##[days**-1]  #lymphocyte decay rate
 r = 0.14 ##[days**-1] #half life of 5 days
 
+# ? - Qué valor tomo de alpha_L antes de grid search??? - x mientras ocupo el ya encontrado.
 
 
 ## # rhs = right hand side of the ode
@@ -36,8 +42,7 @@ def rhs(t, y, parametros): # LISTA
     # parámetros = a ajustar como objetos de clase Parameters
     """
 
-    # P. ESTÁN LLEGANDO 5 VALORES ACÁ.
-    print(y)
+    print(f'y: {y}')
     T_count, L_count, M_count, I_count = y      # variables
     "obs: C.I.'s vienen cmo un array"
 
@@ -47,16 +52,16 @@ def rhs(t, y, parametros): # LISTA
         omega_3 = parametros['omega_3'].value
         g = parametros['g'].value
         s = parametros['s'].value
-        #alpha_T = parametros['alpha_T'].value
 
-        #omega_1 = parametros['omega_1'].value GRID SEARCH
+
+        omega_1 = parametros['omega_1'].value # se vuelve a ajustar cn GRID SEARCH
         #alpha_L = parametros['alpha_L'].value GRID SEARCH
 
            #obs: alpha_T & alpha_L aparecen solo en la parte de radiación
-            # así q no los ocuparé por ahora (?)
+
 
     except KeyError: # uso incorrecto o inválido de llaves (keys) en diccionarios
-        omega_1, omega_2, omega_3, g, s, alpha_T, alpha_L = parametros
+        omega_2, omega_3, g, s, omega_1 = parametros
 
 
     # ODE's -> SIN COMPONENTE RADIACIÓN
@@ -119,8 +124,8 @@ def residuo(parametros, t, data):
     """
 
     # Le entrego los valores iniciales como objeto Parameters fijo (fixed value)
-    y0 = parametros['omega_1'].value, parametros['omega_2'].value, parametros['omega_3'].value,\
-         parametros['g'].value, parametros['s'].value
+    y0 = parametros['T0'].value, parametros['L0'].value,\
+         parametros['M0'].value, parametros['I0'].value
 
     # Defino el modelo matemático de los datos (antes: f(x) = x**2 por ejemplo. ahora: ODE's)
     model = sol_ode_en_t(t, y0, parametros)
@@ -151,7 +156,7 @@ I0 = 0                 # T deaths = 0 at the beginning
 y0 = np.array([T0, L0, M0, I0]) # ocupo array xq solve ivp pide un array para las C.I.}
 
 
-# 2. measured data(data to be fitted) + plot de data
+# 2. measured DATA(data to be fitted) + plot de data
     # - FORMATO: ARRAY.
     # Data centro de cancer UC -> PENDIENTE -> Cir.L levels in blood during & after radiothe.
 
@@ -178,11 +183,11 @@ v_parametros.add('L0', value = L0, vary = False)
 v_parametros.add('M0', value = L0, vary = False)
 v_parametros.add('I0', value = L0, vary = False)
 # Añadimos los parámetros a ajustar EN ESTE CICLO (i.e. vamos a encontrar su valor)
-v_parametros.add('omega_1', value = 1, min=10 **(-3), max=10)
 v_parametros.add('omega_2', value = 1, min=10 **(-3), max=10)
 v_parametros.add('omega_3', value = 1, min=10 **(-3), max=10)
 v_parametros.add('g', value = 1, min=10 ** 8, max=10 ** 14)
 v_parametros.add('s', value = 1, min=0, max=10 ** 14) # P. constraits los inventé
+v_parametros.add('omega_1', value = 1, min=10 **(-3), max=10) # luego se ajusta cn GRID SEARCH
 
 
 
@@ -191,11 +196,9 @@ v_parametros.add('s', value = 1, min=0, max=10 ** 14) # P. constraits los invent
     # retona -> objeto MinimizerResult
 
 resultado = minimize(residuo, v_parametros, args=(t_medido, y_medido_L), method='powell')
-print(t_medido)
-print(type(t_medido))
 
     # t_medido & y_medido_L es la DATA q yo tgo (por ahora lo del paper)
-    # residio tiene el modelo : edo's + P. radiación
+    # residuo tiene el modelo : edo's + P. radiación
 
 '''
 A la clase 'minimize' (recordar q hay otra q se llama Minimize)

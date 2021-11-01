@@ -16,7 +16,7 @@ def cargar_datos_pacientes(name_excel):
     :return: dos arrays, uno con n° L durante y dsp rad de uno/varios pacientes y otro con el t
     '''
 
-    # POR EL MOMENTO, ESTO ES PARA UN PACIENTE, MODELABLE PARA MÁS.
+    # P. POR EL MOMENTO, ESTO ES PARA UN PACIENTE, MODELABLE PARA MÁS.
 
     ### un paciente
 
