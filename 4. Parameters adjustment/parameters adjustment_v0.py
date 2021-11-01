@@ -26,6 +26,7 @@ a = .01  ##[days**-1] #Tumor growth
 ## alpha_T por ahora es un valor q obtenemos en HCC data. Se define al ppio.
     # Este luego se ajusta cn GRID SEARCH
 alpha_T = .037  ##[Gy**-1] #tumor-LQ(linear quadratic) cell kill
+    # Obs: aún no lo ocupo xq no he incluido rad
 
 
 beta_T = alpha_T/14.3  ##[Gy**-2]
@@ -36,13 +37,14 @@ r = 0.14 ##[days**-1] #half life of 5 days
 
 
 ## # rhs = right hand side of the ode
+
 def rhs(t, y, parametros): # LISTA
     """
     Input Ode: Fx entrega odes a solve_ivp en el formato pedido.
     # parámetros = a ajustar como objetos de clase Parameters
     """
 
-    print(f'y: {y}')
+    #print(f'y: {y}') # P. está llamando a esta fx una cant enferma de veces
     T_count, L_count, M_count, I_count = y      # variables
     "obs: C.I.'s vienen cmo un array"
 
@@ -57,7 +59,7 @@ def rhs(t, y, parametros): # LISTA
         omega_1 = parametros['omega_1'].value # se vuelve a ajustar cn GRID SEARCH
         #alpha_L = parametros['alpha_L'].value GRID SEARCH
 
-           #obs: alpha_T & alpha_L aparecen solo en la parte de radiación
+           #P. obs: alpha_T & alpha_L aparecen solo en la parte de radiación
 
 
     except KeyError: # uso incorrecto o inválido de llaves (keys) en diccionarios
@@ -93,27 +95,48 @@ def sol_ode_en_t(t, y0, parametros): # y(t)
     # obs:
     # ANTES -> y0 = np.array([T,L,M,I]) #Condiciones iniciales
     # -> AHORA SE LA ENTREGAMOS A LA FX 'sol_ode_en_t' CMO ARGUMENTO
-    print(t)
-    print(type(t))
+
+    #print(f't: {t}') # tipo  <class 'numpy.ndarray'>
+
     # P. ESTÁ ENTRANDO EL ARRAY COMPLETO DEL TIEMPO ACÁ!!
+    # P. solución: PUEDO EVALUAR ESTA WEA CN UN FOR Y EL RESULTADO, SOLO DE LOS LINFOCITOS,
+    # LOS DEVUELVO TAL CMO LO HARÍA ODEINT.
+        # sol de linfocitos se obtiene con : 'sol.y[1]'
 
-    sol = solve_ivp(rhs, (1,1+1), y0, t_eval = np.array([1+1]), max_step = 0.001, args=(parametros,))
+    # FLUJO:
+    # Recibimos un 't' que es un array de shape = (83,)
+    # Creamos un array que vaya a contener todos los resultados para L con las EDO.
+    sol_y_model = np.array([[y0[0], y0[1], y0[2], y0[3]]]) # agregamos C.I. al array
+    # Evaluamos solve_ivp para cada tiempo
+    for i in range(len(t)-1):
+        # así respeto los intervalos de tiempo dados entre dos t en t_medido.
+        if i != 82:
+            sol = solve_ivp(rhs, (t[i], t[i+1]), y0, t_eval = np.array([t[i+1]]),
+                            max_step = 0.001, args = (parametros, ))
+        # solve_ivp arroja muchas cosas cmo un reporte general
+        # P. entonces tgo q sacar solo lo q me interesa, L, y agregarlo al array
+            aux_sol_y_model = np.array([ sol.y[0][0], sol.y[1][0], sol.y[2][0], sol.y[3][0] ])
+            sol_y_model = np.append(sol_y_model, aux_sol_y_model)
+        # No entiendo xq sol_y_model queda como un array enorme sin sub arrays de 4 elementos
+        # si cuando imprimo sol.y se ve bn.
+        #print(f'sol.y: {sol.y}')
     #print(sol)
-    print(sol)
+    print(f'sol_y_model: {sol_y_model}')
 
-        #LO NUEVO -> 'args=(parametros,)'
+
+    ########SOBRE solve_ivp #####################################
+    #LO NUEVO -> 'args=(parametros,)'
     #t_eval = t, q me entrega, en q se evalua edo (puede evaluar en más puntos, xq eso lo define
     # inteligentemente solve_ivp internamente, solo q no me los entrega); ese t tiene q estar
     # dentro d (t,t+1) solve_ivp integra, i.e. obtiene sols en (t,t+1) y luego evalua eso
     # en t_eval.
     #Devuelve sol.y -> array [[T][L][M][I]]) , sol.t -> array [t]
+    #############################################################
+
+    # P. Aquí actualizar "sol" cn la influencia de la radiación.
 
 
-    # P. Aquí actualizar "sol" cn la influencia de la rad.
-
-
-    # P. solo me tgo q preocupar q se retorne lo que pide el resto del código
-    return sol
+    return sol_y_model
 
 
 
@@ -128,11 +151,17 @@ def residuo(parametros, t, data):
          parametros['M0'].value, parametros['I0'].value
 
     # Defino el modelo matemático de los datos (antes: f(x) = x**2 por ejemplo. ahora: ODE's)
-    model = sol_ode_en_t(t, y0, parametros)
-    # Esto va a arrojar un arreglo (np.array)
+    model = sol_ode_en_t(t, y0, parametros) # Esto arroja un arreglo (np.array)
+
     #P. # y por una razón q aún no entiendo (esto lo extraje de "Ej minimizer & Odes.py") vamos a:
     # Recorrer cada elemento ":" del array y extraer de eso el elemento en pos 1 ",1"
+
+    #print(f'type_model: {type(model)}')
+    #print(f'model: {model}')
+
     y_model = model[:, 1]
+    #print(f'y_model: {y_model}')
+    # Esto recorre cada elemento ":" del array y va extrayendo el elemento en pos 1 ",1"
 
     return (y_model - data).ravel()
     # Parece calcular el residuo entre actual and fitted data}
@@ -153,7 +182,9 @@ T0 = 1.07 * 10 ** 11
 L0 = 5.61 * 10 ** 9
 M0 = 1.07 * 10 ** 8    # Patient with metastasis
 I0 = 0                 # T deaths = 0 at the beginning
-y0 = np.array([T0, L0, M0, I0]) # ocupo array xq solve ivp pide un array para las C.I.}
+y0 = np.array([T0, L0, M0, I0]) # ! - Se ocupara más abajo en el punto 5.
+    # pero ojo q dentro de las funciones se ocupan las C.I como objetos clases Parameter
+    # dentro de una tupla llamada y0.
 
 
 # 2. measured DATA(data to be fitted) + plot de data
@@ -180,8 +211,8 @@ v_parametros = Parameters() #variable parametros, así no se cambia su nombre en
 # Añadimos las C.I. como parámetros fijos (FIXED)
 v_parametros.add('T0', value = T0, vary = False) # FIXED PARAMETER -> vary = False
 v_parametros.add('L0', value = L0, vary = False)
-v_parametros.add('M0', value = L0, vary = False)
-v_parametros.add('I0', value = L0, vary = False)
+v_parametros.add('M0', value = M0, vary = False)
+v_parametros.add('I0', value = I0, vary = False)
 # Añadimos los parámetros a ajustar EN ESTE CICLO (i.e. vamos a encontrar su valor)
 v_parametros.add('omega_2', value = 1, min=10 **(-3), max=10)
 v_parametros.add('omega_3', value = 1, min=10 **(-3), max=10)
@@ -209,8 +240,9 @@ Así tmbn le tengo que pedir cn q MÉTODO ENCONTRARÁ los valores de los paráme
 
 
 # 5. # check results of the fit -> ocupo 'resultado' q se obtuvo ocupando clase 'minimize'
-
 fitted_data = sol_ode_en_t(t_medido, y0, resultado.v_parametros)
+    # ese y0 es el array que definimos como variable global.
+    # no son los objetos Parameter q ocupan las funciones antes.
 
 # obs: '9.' es un float
 
