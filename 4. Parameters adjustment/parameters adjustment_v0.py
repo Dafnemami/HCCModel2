@@ -29,7 +29,6 @@ Hay dos formas para resolver edos de esa libreria:
 #  -- P.
 
 
-
 #########################################################
 #                       CÓDIGO                          #
 #########################################################
@@ -50,16 +49,17 @@ beta_T = alpha_T/14.3  ##[Gy**-2]
 f = .033 ##[days**-1]  #lymphocyte decay rate
 r = 0.14 ##[days**-1] #half life of 5 days
 
-# ? - Qué valor tomo de alpha_L antes de grid search??? - x mientras ocupo el ya encontrado.
+# ? - Qué valor tomo de alpha_L antes de grid search???
+# x mientras ocuparé el ya encontrado supongo.
 
 
-### RESOLVER EDO'S
+### RESOLVER ODE's
 
 ### rhs = right hand side of the ode
 def rhs(t, y, parametros): # LISTA
     """
     Input Ode: Fx entrega odes a solve_ivp en el formato pedido.
-    # parámetros = a ajustar como objetos de clase Parameters
+    # parámetros (a ajustar) son objetos de la clase Parameters
     """
 
     #print(f'y: {y}') # P. está llamando a esta fx una cant enferma de veces
@@ -67,18 +67,17 @@ def rhs(t, y, parametros): # LISTA
     "obs: C.I.'s vienen cmo un array"
 
 
-    try:                                        # parámetros a ajustar
+    try:  # parámetros a ajustar
         omega_2 = parametros['omega_2'].value
         omega_3 = parametros['omega_3'].value
         g = parametros['g'].value
         s = parametros['s'].value
 
-
         omega_1 = parametros['omega_1'].value # se vuelve a ajustar cn GRID SEARCH
-        #alpha_L = parametros['alpha_L'].value GRID SEARCH
 
-           #P. obs: alpha_T & alpha_L aparecen solo en la parte de radiación
-
+        #P. obs: alpha_T & alpha_L aparecen solo en la parte de radiación
+        # alpha_T = parametros['alpha_T'] FALTA Q AGREGUE LA RADIACIÓN
+        # alpha_L se busca con grid search
 
     except KeyError: # uso incorrecto o inválido de llaves (keys) en diccionarios
         omega_2, omega_3, g, s, omega_1 = parametros
@@ -95,9 +94,8 @@ def rhs(t, y, parametros): # LISTA
     I_dot = - r * I_count
 
 
+    # OUTPUT -> no puede cambiarse.
     dydt = np.array([T_dot, L_dot, M_dot, I_dot])
-
-    # Este output no puede cambiarse.
     return dydt
 
 
@@ -177,9 +175,11 @@ def residuo(parametros, t, data):
     #print(f'type_model: {type(model)}')
     #print(f'model: {model}')
 
+    # Esto recorre cada elemento ":" del array y va extrayendo el elemento en pos 1 ",1"
     y_model = model[:, 1]
     #print(f'y_model: {y_model}')
-    # Esto recorre cada elemento ":" del array y va extrayendo el elemento en pos 1 ",1"
+        # aRROJA:
+    # IndexError: too many indices for array: array is 1-dimensional, but 2 were indexed
 
     return (y_model - data).ravel()
     # Parece calcular el residuo entre actual and fitted data}
@@ -190,7 +190,7 @@ def residuo(parametros, t, data):
 ## LISTAS LAS FXNES. AHORA LA DATA Y PLOTTEOS
 
 
-# 1. Condiciones iniciales
+# PASO_1. Condiciones iniciales
     # T:(primary) Tumor cells
     # L: Linfocitos
     # M: Metastatic Tumor Cells
@@ -205,7 +205,7 @@ y0 = np.array([T0, L0, M0, I0]) # ! - Se ocupara más abajo en el punto 5.
     # dentro de una tupla llamada y0.
 
 
-# 2. measured DATA(data to be fitted) + plot de data
+# PASO_2. measured DATA(data to be fitted) + plot de data
     # - FORMATO: ARRAY.
     # Data centro de cancer UC -> PENDIENTE -> Cir.L levels in blood during & after radiothe.
 
@@ -222,7 +222,8 @@ plt.scatter(t_medido, y_medido_L, marker='o', color='b', label='measured data', 
 
 
 
-#3. set parameters including bounds; you can also fix parameters (use vary=False)
+# PASO_3. set parameters including bounds; you can also fix parameters (use vary=False)
+
 v_parametros = Parameters() #variable parametros, así no se cambia su nombre en las fxnes.
     #Guarda los parámetros y luego lo llamas cmo un dict
 
@@ -241,7 +242,7 @@ v_parametros.add('omega_1', value = 1, min=10 **(-3), max=10) # luego se ajusta 
 
 
 
-# 4. instanciamos a minimize qn toma una fx objetivo y calcula el array a ser minimizado
+# PASO_4. instanciamos a minimize qn toma una fx objetivo y calcula el array a ser minimizado
     # retona -> objeto MinimizerResult
 
 resultado = minimize(residuo, v_parametros, args=(t_medido, y_medido_L), method='powell')
@@ -257,7 +258,7 @@ Así tmbn le tengo que pedir cn q MÉTODO ENCONTRARÁ los valores de los paráme
 '''
 
 
-# 5. # check results of the fit -> ocupo 'resultado' q se obtuvo ocupando clase 'minimize'
+# PASO_5. # check results of the fit -> ocupo 'resultado' q se obtuvo ocupando clase 'minimize'
 fitted_data = sol_ode_en_t(t_medido, y0, resultado.v_parametros)
     # ese y0 es el array que definimos como variable global.
     # no son los objetos Parameter q ocupan las funciones antes.
@@ -267,13 +268,13 @@ fitted_data = sol_ode_en_t(t_medido, y0, resultado.v_parametros)
 
 
 
-# 6. Plot fitted data
+# PASO_6. Plot fitted data
 plt.plot(t_medido, fitted_data[:, 1], '-', linewidth=2, color='red', label='fitted data')
 plt.legend()
 
 
 
-# 7 # display fitted statistics
+# PASO_7 # display fitted statistics
 report_fit(resultado) # arroja un printeable q me describe muchas cosas sobre el fit
 
 
