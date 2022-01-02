@@ -80,7 +80,8 @@ def rad_linfo(name_excel,cols,Ln):
 
     Lnplusone+= Ln*(1-49.5129250*0.01) # Se agregan los linfocitos cuyo DLi = 0; que corresponde al tot
 
-    return Lnplusone #Se comprobó por excel que efectivamente da 2734762016.9819927 el Ln+1 dsp de la primera rad.
+    return Lnplusone
+    #Se comprobó por excel que efectivamente da 2734762016.9819927 el Ln+1 dsp de la primera rad.
 
 
 

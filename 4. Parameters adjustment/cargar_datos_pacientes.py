@@ -10,17 +10,17 @@ import numpy as np
 def cargar_datos_pacientes(name_excel):
     '''
     Esta función carga desde un archivo excel, todos los conteos de linfocitos
-    de uno (P.o varios) pacientes.
+    de un paciente.
 
-    :param cols: lista con n° columnas del excel a extraer (inicia con 0)
+    P. que fxne para más pacientes.
+
     :return: dos arrays, uno con n° L durante y dsp rad de uno/varios pacientes y otro con el t
     '''
-
-    # P. POR EL MOMENTO, ESTO ES PARA UN PACIENTE, MODELABLE PARA MÁS.
 
     ### un paciente
 
     datos = pd.read_excel(name_excel, sheet_name=1) #abrir excel, página 1 dnd ta fig 3a
+    # ? - Por qué puntos fig 3a ?
     df_datos = pd.DataFrame(datos) # Formato para trabajar cn los datos
     # DataFrame is a 2-dimensional labeled data structure
 
@@ -68,7 +68,7 @@ def cargar_datos_pacientes(name_excel):
                 lista_tuplas_aux.remove(par)
                 # Si hay dos puntos q ocurren al mismo tiempo, se añadirán sin problema
 
-    #print(lista_tuplas) #probar q los datos están ordenados.
+    #print(lista_tuplas) # probar q los datos están ordenados.
 
     tiempo, datos = zip(*lista_tuplas)
     #print(lista_tuplas)

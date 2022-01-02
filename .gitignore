@@ -1,0 +1,14 @@
+# --------------------------------------------
+# Python
+# --------------------------------------------
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+*.idea
+*.DS_STORE
+/- Repasos
+/venv
+/4. Parameters adjustment/Sung figs 3 digitalized points.xlsx

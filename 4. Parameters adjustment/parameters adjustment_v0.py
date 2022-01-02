@@ -6,26 +6,43 @@ from scipy.integrate import solve_ivp
 from cargar_datos_pacientes import cargar_datos_pacientes
 
 
+#########################################################
+#               AJUSTE PARÁMETROS HCC                   #
+#########################################################
+
 '''
 Hay dos formas para resolver edos de esa libreria:
  (1) odeint -> más vieja
  (2) solve_ivp -> + nueva y cn más opciones. -> YO OCUPO ESTA
 '''
 
-## FLUJO
+####           FLUJO DE ESTE ARCHIVO               #####
 #Definimos la función que le entrega el lado derecho de cada EDO, de un sistema
 # de EDO's de primer orden, a solve_ivp.
 #(Esto ya lo había hecho en el código ppal, ahora le agregaré manejo de excepciones xq
 # si y le pediré q reciba los parámetros a ajustar como objetos de clase Parameters)
 
 
+####          SINTAXIS          ####
+#  -- ##
+#  -- ?
+#  -- P.
+
+
+
+#########################################################
+#                       CÓDIGO                          #
+#########################################################
+
 ## PARÁMETROS OBTENIDOS DE LA LITERATURA (4, fixed):
-a = .01  ##[days**-1] #Tumor growth
 
+#Tumor growth
+a = .01  ##[days**-1]
 
-## alpha_T por ahora es un valor q obtenemos en HCC data. Se define al ppio.
-    # Este luego se ajusta cn GRID SEARCH
-alpha_T = .037  ##[Gy**-1] #tumor-LQ(linear quadratic) cell kill
+#alpha_T -> tumor-LQ(linear quadratic) cell kill
+alpha_T = .037  ##[Gy**-1]
+    # Paper hace: Por ahora es un valor escogido basado en HCC data
+                # Luego se ajusta cn GRID SEARCH
     # Obs: aún no lo ocupo xq no he incluido rad
 
 
@@ -36,8 +53,9 @@ r = 0.14 ##[days**-1] #half life of 5 days
 # ? - Qué valor tomo de alpha_L antes de grid search??? - x mientras ocupo el ya encontrado.
 
 
-## # rhs = right hand side of the ode
+### RESOLVER EDO'S
 
+### rhs = right hand side of the ode
 def rhs(t, y, parametros): # LISTA
     """
     Input Ode: Fx entrega odes a solve_ivp en el formato pedido.
