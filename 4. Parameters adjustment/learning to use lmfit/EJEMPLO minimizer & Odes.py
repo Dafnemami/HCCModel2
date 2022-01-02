@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from lmfit import minimize, Parameters, Parameter, report_fit
 from scipy.integrate import odeint
+
 '''
 Hay dos formas para resolver edos de esa libreria:
  (1) odeint -> más vieja
@@ -15,7 +16,7 @@ obs
     
     
 > Pendiente
-    - Class Parameters: EN PROCESO
+    - Class Parameters: Leida
     
 '''
 

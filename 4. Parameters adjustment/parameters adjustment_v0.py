@@ -1,4 +1,3 @@
-#IMPORTS
 import numpy as np
 import matplotlib.pyplot as plt
 from lmfit import minimize, Parameters, report_fit
@@ -115,7 +114,7 @@ def sol_ode_en_t(t, y0, parametros): # y(t)
     #print(f't: {t}') # tipo  <class 'numpy.ndarray'>
 
 
-    # FLUJO:
+    ## FLUJO:
     # Recibimos un 't' que es un array de shape = (83,)
     # Creamos un array que vaya a contener todos los resultados para L con las EDO.
     sol_y_model = np.array([[y0[0], y0[1], y0[2], y0[3]]]) # agregamos C.I. al array
@@ -132,6 +131,7 @@ def sol_ode_en_t(t, y0, parametros): # y(t)
         # si cuando imprimo sol.y se ve bn.
         # P. VOY A SEGUIR TENIENDO EL PROBLEMA CON y_model SI NO ARREGLO ESTO PRIMERO.
         #print(f'sol.y: {sol.y}')
+
     #print(sol)
     print(f'sol_y_model: {sol_y_model}')
 
@@ -140,14 +140,14 @@ def sol_ode_en_t(t, y0, parametros): # y(t)
         # Hacer derechamente el array solo de L y no hacer la tontera del y_model q me
         # está molestando.
 
-    ########SOBRE solve_ivp #####################################
+    ########      Sobre fxnamiento de solve_ivp        ###########
     #LO NUEVO -> 'args=(parametros,)'
     #t_eval = t, q me entrega, en q se evalua edo (puede evaluar en más puntos, xq eso lo define
     # inteligentemente solve_ivp internamente, solo q no me los entrega); ese t tiene q estar
     # dentro d (t,t+1) solve_ivp integra, i.e. obtiene sols en (t,t+1) y luego evalua eso
     # en t_eval.
     #Devuelve sol.y -> array [[T][L][M][I]]) , sol.t -> array [t]
-    #############################################################
+    ###############################################################
 
     # P. Aquí actualizar "sol" cn la influencia de la radiación.
 
@@ -178,7 +178,7 @@ def residuo(parametros, t, data):
     # Esto recorre cada elemento ":" del array y va extrayendo el elemento en pos 1 ",1"
     y_model = model[:, 1]
     #print(f'y_model: {y_model}')
-        # aRROJA:
+        # ARROJA:
     # IndexError: too many indices for array: array is 1-dimensional, but 2 were indexed
 
     return (y_model - data).ravel()
