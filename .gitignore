@@ -8,6 +8,7 @@ __pycache__/
 *$py.class
 
 *.idea
+/.idea
 *.DS_STORE
 /- Repasos
 /venv
