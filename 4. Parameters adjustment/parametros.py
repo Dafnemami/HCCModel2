@@ -108,7 +108,7 @@ iteraciones_tot = 100 # cuantas veces se resuelve la EDO! (si hay 15 dosis, ento
 
 
 #### RADIACIÓN Y ODE
-
+sol_y = np.array([])
 sol_y_T = np.array([T])
 sol_y_L = np.array([L])
 sol_y_M = np.array([M])
