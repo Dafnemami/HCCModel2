@@ -66,7 +66,9 @@ def emulador_odeint(t, y0, parametros): # y(t)
     - Solution to the ODE y'(t) = f(t,y,k) with initial condition y(0) = y0
     para un array de tiempos a evaluar uno a uno con solve_ivp.
 
-    t --> <class 'numpy.ndarray'>
+    t --> <class 'numpy.ndarray'>  --
+        P. debo evaluar a la edo en los mismos tiempos q los datos,
+        así q debo ocupar ese array t_medido.
     y0 = np.array([T,L,M,I]) #Condiciones iniciales
 
     :return: emular el array q entregaría odeint, i.e.
@@ -80,12 +82,17 @@ def emulador_odeint(t, y0, parametros): # y(t)
     I = p.I
 
     #### Arrays a retornar
+    sol_y = p.sol_y  # solo este me interesa retornar.
     sol_y_T = p.sol_y_T
     sol_y_L = p.sol_y_L
     sol_y_M = p.sol_y_M
     sol_y_I = p.sol_y_I
     sol_t = p.sol_t
 
+    ### Tiempos a evaluar
+    'tiempo llega como un array, pues esta función antes contenía a odeint en lugar de' \
+    'solve_ivp, el cual trabaja con t==array. Plt, en el codigo a continuación ' \
+    'P. usaré iteradores para recorrer el array del tiempo'
 
     for iteraciones in range(p.iteraciones_tot):
 
@@ -111,6 +118,8 @@ def emulador_odeint(t, y0, parametros): # y(t)
         # SECCIÓN: Ode's
 
         y0 = np.array([T, L, M, I]) #Condiciones iniciales
+            # La fx recibe y0, pero no me sirven xq son antes de pasar por la rad.
+
         sol = solve_ivp(rhs, (t,t+1), y0, t_eval = np.array([t+1]), max_step = 0.001)
         #t_eval = t, q me entrega, en q se evalua edo (puede evaluar en más puntos, xq eso lo define
         # inteligentemente solve_ivp internamente, solo q no me los entrega); ese t tiene q estar
@@ -119,6 +128,11 @@ def emulador_odeint(t, y0, parametros): # y(t)
         #Devuelve sol.y -> array [[T][L][M][I]]) , sol.t -> array [t]
 
         #Añadir resultados a array para gráficar
+            # solo este me interesa retornar.
+        sol_y = np.append(sol_y, np.array(sol.y[0][0], sol.y[1][0],
+                                          sol.y[2][0], sol.y[3][0]))
+            # ? - tgo la duda si va a mantener la separación [[T,L,M,I] [T,L,M,I]...]
+            # o si va a dejarlo cmo [T,L,M,I,T,L,M,I]
         sol_y_T = np.append(sol_y_T, sol.y[0]) # Append para arrays
         sol_y_L = np.append(sol_y_L, sol.y[1]) #(lo q tgo, lo q quiero agregar)
         sol_y_M = np.append(sol_y_M, sol.y[2])
@@ -136,6 +150,7 @@ def emulador_odeint(t, y0, parametros): # y(t)
         t += 1 #para que en el siguiente intervalor se evalue en el segundo siguiente
 
 
+    return sol_y
 
 
 
