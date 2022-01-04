@@ -89,10 +89,20 @@ def emulador_odeint(t, y0, parametros): # y(t)
     sol_y_I = p.sol_y_I
     sol_t = p.sol_t
 
-    ### Tiempos a evaluar
-    'tiempo llega como un array, pues esta función antes contenía a odeint en lugar de' \
-    'solve_ivp, el cual trabaja con t==array. Plt, en el codigo a continuación ' \
+    #### Tiempos a evaluar
+    'llega t_medido==datos empíricos (un array), pues esta función antes contenía a ' \
+    'odeint el cual trabaja con t==array. Plt, en el codigo a continuación ' \
     'P. usaré iteradores para recorrer el array del tiempo'
+
+    'P. !!! creo q puedo pedirle a evalue más cosas a solve_ivp dentro de un día, con t_eval,' \
+    'así respetaamos aplicar la radiación cuando corresponda (i.e una vez al día en los dias q ' \
+    'corresponde)'
+
+     #### Flujo del siguiente bloque de código:
+        # Se irradia a las 00hrs del día 1 - cambia T, L, I
+        # Se simula la ODE entre las 00hrs y las 23:59 del dia 1 - cambia T, L, I, M
+        # ODE es **evaluada** en todos los t que pertenezcan a las 00hrs y las 23:59 del dia 1
+            # evaluada == soluciones q retorna
 
     for iteraciones in range(p.iteraciones_tot):
 

@@ -1,4 +1,6 @@
 import numpy as np
+from cargar_datos_pacientes import cargar_datos_pacientes
+
 
 #########################################################
 #                   PARÁMETROS HCC                      #
@@ -116,3 +118,15 @@ sol_y_I = np.array([I])
 sol_t = np.array([0])
 
 
+##################################################################
+###################      DATA L MEDIDOS      #####################
+##################################################################
+
+# PASO_2. measured DATA(data to be fitted) + plot de data
+    # - FORMATO: ARRAY.
+    # Data centro de cancer UC -> PENDIENTE -> Cir.L levels in blood during & after radiothe.
+
+    # temporal: datos de sung. - FORMATO: ARRAY
+    # ? - para reproducir los resultados de sung necesito ocupar fig 3a o 3b ?
+t_medido, y_medido_L = cargar_datos_pacientes("Sung figs 3 digitalized points.xlsx")
+        # OBS: Ocuparé x el momento resultaddo fig 3b para reproducir resultados de sung.
