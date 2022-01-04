@@ -61,19 +61,23 @@ def rhs(t, y, parametros): # right hand side of the ode
 
 
 def emulador_odeint(t, y0, parametros): # y(t)
-    # antes "sol_ode_en_t"
+    # antes "sol_ode_en_t" en 'ODEs_y_rad_v2.py'
+
     ''' Esto es necesario porque la función residuo necesita una función que
      represente el modelo. ej de un modelo f(x) == x**2
     - Solution to the ODE y'(t) = f(t,y,k) with initial condition y(0) = y0
     para un array de tiempos a evaluar uno a uno con solve_ivp.
 
-    t --> <class 'numpy.ndarray'>  --
-        P. debo evaluar a la edo en los mismos tiempos q los datos,
-        así q debo ocupar ese array t_medido.
-    y0 = np.array([T,L,M,I]) #Condiciones iniciales
+    1. t --> <class 'numpy.ndarray'>  --
 
-    :return: emular el array q entregaría odeint, i.e.
-    un array de arrays del tipo [T, L, M, I] de largo t_data (t_medido)
+    2. y0 = np.array([T,L,M,I]) #Condiciones iniciales
+          --> este parámetro no se ocupa, pues el y0 q me sirve es el de dsp de la primera
+          dosis de rad, y el que le llega a esta fx corresponde a antes de ello.
+
+    3. parametros --> los recibe para que solve_ivp se los entregue a rhs
+
+    :return: emular el array q retornaria odeint cuando t_array == t_medido.
+      i.e. un array de arrays del tipo [T, L, M, I] de largo t_data (t_medido)
     '''
 
     #### C.ios ########
@@ -148,7 +152,9 @@ def emulador_odeint(t, y0, parametros): # y(t)
         v_array_t_eval = crear_array_t_eval(dia_actual, t)
 
         sol = solve_ivp(rhs, (dia_actual, dia_actual+1), y0,
-                        t_eval = v_array_t_eval, max_step = 0.001)
+                        t_eval = v_array_t_eval, max_step = 0.001, args=(parametros, )
+                        )
+            # obs: en solve_ivp "arg" son entregados a la fx "rhs"
 
         #t_eval = t, q me entrega, en q se evalua edo (puede evaluar en más puntos, xq eso lo define
         # inteligentemente solve_ivp internamente, solo q no me los entrega); ese t tiene q estar
@@ -158,10 +164,13 @@ def emulador_odeint(t, y0, parametros): # y(t)
 
         #Añadir resultados a array para gráficar
             # solo este me interesa retornar.
+             # (solve_ivp arroja muchas cosas cmo un reporte general "sol.y")
+
         sol_y = np.append(sol_y, np.array(sol.y[0][0], sol.y[1][0],
                                           sol.y[2][0], sol.y[3][0]))
             # ? - tgo la duda si va a mantener la separación [[T,L,M,I] [T,L,M,I]...]
             # o si va a dejarlo cmo [T,L,M,I,T,L,M,I]
+
         sol_y_T = np.append(sol_y_T, sol.y[0]) # Append para arrays
         sol_y_L = np.append(sol_y_L, sol.y[1]) #(lo q tgo, lo q quiero agregar)
         sol_y_M = np.append(sol_y_M, sol.y[2])
@@ -185,5 +194,6 @@ def emulador_odeint(t, y0, parametros): # y(t)
 
 
 if __name__ == "__main__":
-    # Para probar si el código retorna lo q quiero.
+    # Queremos asegurarnos que fx emulador_odeint retorna lo mismo que odeint:
+
     pass
