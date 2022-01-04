@@ -28,6 +28,12 @@ import parametros as p
 #                       CÓDIGO                          #
 #########################################################
 
+
+######### SECCIÓN ############
+#### AJUSTE DE PARÁMETROS ####
+##############################
+
+
 ## TODO 04/01/2022 #1
 ## P. patterns of faliure (Pablo Cancer UC)
     ## Continuare trabajando en este código PARA TESTEAR
@@ -74,3 +80,29 @@ def residuo(parametros, t, data):
 
     return (modelo_para_L - data).ravel()
     # Parece calcular el residuo entre actual and fitted data
+
+
+
+## FLUJO
+# Cargar data de los linfocitos - dos arrays.
+t_medido, y_medido_L = cargar_datos_pacientes("Sung figs 3 digitalized points.xlsx")
+    # datos fueron obtenidos a través de la digitalización de la curva azul de la figura
+    # 3b del paper HCC-Sung et al.
+
+    # Eventualmente acá se leerán los datos de pacientes con HCC del Centro de Cancer UC
+    # Data centro de cancer UC -> PENDIENTE -> Cir.L levels in blood during & after radiothe.
+
+
+
+######### SECCIÓN ############
+#### AJUSTE DE PARÁMETROS ####
+##############################
+
+## Gráfico Data:
+plt.figure() # -> ? NO SÉ K HACE ESTO
+plt.scatter(t_medido, y_medido_L, marker='o', color='b', label='measured data', s= 30)
+    # plt.scatter -> A scatter plot of y vs. x with varying marker size and/or color.
+    # Se hace para ver en el plot la data REAL junto cn el mjr fitteo q encontramos.
+
+
+# todo: PRIORIDAD --> TERMINAR ESTE CÓDIGO.

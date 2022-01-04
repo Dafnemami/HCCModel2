@@ -33,7 +33,6 @@ I = 0                 # T deaths = 0 at the beginning
 # T, I
 alpha_T = .139  ##[Gy**-1] #tumor-LQ(linear quadratic) cell kill
 beta_T = alpha_T/14.3  ##[Gy**-2]
-# D_T se pide como input.
 
 
 # L
@@ -110,7 +109,6 @@ if dosis_total != 0: #si dosis_total == 0 entonces solo se resuelve la edo por u
 
 # ITERACIONES TOTALES
 iteraciones_tot = 100 # cuantas veces se resuelve la EDO! (si hay 15 dosis, entonces [15dosis+edo] + [t - iteraciones_tot edo])
-
 
 
 
@@ -231,6 +229,8 @@ for iteraciones in range(iteraciones_tot):
 
     t += 1 #para que en el siguiente intervalor se evalue en el segundo siguiente
 
+    print(f'sol.y: {sol.y[0]}')
+
 
 
 
@@ -301,7 +301,7 @@ plt.grid()
 
 plt.xlabel('Time (days)')
 plt.ylabel('I cells count')
-plt.title('T  v/s  time, frac = 15')
+plt.title('L  v/s  time, frac = 15')
 plt.legend()
 
 #guardar lo dibujado hasta ahora

@@ -19,7 +19,7 @@ def cargar_datos_pacientes(name_excel):
 
     ### un paciente
 
-    datos = pd.read_excel(name_excel, sheet_name=1) #abrir excel, página 1 dnd ta fig 3a
+    datos = pd.read_excel(name_excel, sheet_name=0) #abrir excel, página 1 dnd ta fig 3a
     # ? - Por qué puntos fig 3a ?
     df_datos = pd.DataFrame(datos) # Formato para trabajar cn los datos
     # DataFrame is a 2-dimensional labeled data structure

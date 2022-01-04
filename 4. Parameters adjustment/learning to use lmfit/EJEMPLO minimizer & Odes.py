@@ -55,8 +55,8 @@ def g(t, x0, paras):
     #print(f't en odeint: {t}')
     # ODE INT TRABAJA CN EL t cmo array, mientras q solve_ivp NO
     x = odeint(f, x0, t, args=(paras,))
-    print(f'resulrado odeint: {x}') # array de 3, xq "f0, f1, f2", para mi es algo cmo T,L... pero solo querré L.
-    print(f'x.shape: {x.shape}')
+    print(f'resultado odeint: {x}') # array de 3, xq "f0, f1, f2", para mi es algo cmo T,L... pero solo querré L.
+    #print(f'x.shape: {x.shape}')
     # "args=(paras,) es xq entremedio ese keyword argument va a ser llamado como *args y se va
     # a desempaquetar entregando a f solo 'paras' "
 
@@ -74,24 +74,23 @@ def residual(paras, t, data):
     x0 = paras['x10'].value, paras['x20'].value, paras['x30'].value
     # '.value' es un atributo de objetos Parameters
     model = g(t, x0, paras)
-    print(f'modelo : {model}')
+    # obs: model == resultado odeint "x", q es un class 'numpy.ndarray'
 
     # you only have data for one of your variables
+        # Esto significa que la data q usaré para fittear corresponde solo a f2, y
+        # no tiene nada para f1 y f3, plt deberá solo quedarse con un array de los
+        # resultados para f2 obtenidos en los t_medidos.
 
-    x2_model = model[:, 1] # esto arroja un np.array (arreglo) - class 'numpy.ndarray'
-    print(f'x2_model : {x2_model}')
-    # ? - entiendo cmo fxna, pero xq hace eso?
     # Esto recorre cada elemento ":" del array y va extrayendo el elemento en pos 1 ",1"
+    x2_model = model[:, 1] # arreglo de solo f2 para t_medidos
+    #print(f'x2_model : {x2_model}')
 
     return (x2_model - data).ravel()
         # ? -> Qué es ravel()? -> Parece calcular el residuo entre actual and fitted data
 
 
-# initial conditions
-x10 = 5.
-x20 = 0
-x30 = 0
-y0 = [x10, x20, x30]
+
+
 
 
 # measured data -> data to be fitted
@@ -105,9 +104,15 @@ plt.figure()
 plt.scatter(t_measured, x2_measured, marker='o', color='b', label='measured data', s=75)
 
 
+# initial conditions
+x10 = 5.
+x20 = 0
+x30 = 0
 
 # set parameters including bounds; you can also fix parameters (use vary=False)
 params = Parameters()
+
+
     #Guarda los parámetros y luego lo llamas cmo un dict
 params.add('x10', value=x10, vary=False) # FIXED PARAMETER -> vary = False
 params.add('x20', value=x20, vary=False)
@@ -117,10 +122,10 @@ params.add('k1', value=0.3, min=0.0001, max=2.)
 
 
 
-# fit model
-result = minimize(residual, params, args=(t_measured, x2_measured), method='leastsq')  # leastsq nelder
-print(f't_measured: {t_measured}')
-print(f't_measured: {type(t_measured)}')
+# fit model  - ESTA FX LLAMA A RESIDUAL Y X ENDE A g MUCHAS VECES SG MÉTODO ESCOGIDO.
+result = minimize(residual, params, args=(t_measured, x2_measured), method='leastsq')
+#print(f't_measured: {t_measured}')
+#print(f't_measured: {type(t_measured)}')
 
     # obs: t_measured & x2_measured es la DATA q yo tgo
 
@@ -135,12 +140,15 @@ Así tmbn le tengo que pedir cn q MÉTODO ENCONTRARÁ los valores de los paráme
 '''
 
 # check results of the fit -> ocupo 'result' q se obtuvo ocupando clase 'minimize'
-    #OJO-> ahora recién llamó a 'g'
+    #OJO-> ahora recién llamó a 'g' -- tmbn la llamas antes en fx residual
 #           -> 'g' = Solution to the ODE x'(t) = f(t,x,k) with initial condition x(0) = x0
 #                    [para algún t]
 
+y0 = [x10, x20, x30]
 data_fitted = g(np.linspace(0., 9., 100), y0, result.params)
         # obs: '9.' es un float
+        # con el linspace genero un span de tiempos a evaluar.
+        # a medida q le doy más ptos más suave es la curva
 
 # plot fitted data
 plt.plot(np.linspace(0., 9., 100), data_fitted[:, 1], '-', linewidth=2, color='red', label='fitted data')
@@ -155,4 +163,4 @@ plt.ylim([0, 1.1 * max(data_fitted[:, 1])])
 # display fitted statistics
 report_fit(result) # arroja un printeable q me describe muchas cosas sobre el fit
 
-#plt.show()
+plt.show()
