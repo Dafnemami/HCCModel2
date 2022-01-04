@@ -80,6 +80,7 @@ def emulador_odeint(t, y0, parametros): # y(t)
     L = p.L
     M = p.M
     I = p.I
+    dia_actual = p.t # día/tiempo inicial == 0
 
     #### Arrays a retornar
     sol_y = p.sol_y  # solo este me interesa retornar.
@@ -103,6 +104,8 @@ def emulador_odeint(t, y0, parametros): # y(t)
         # Se simula la ODE entre las 00hrs y las 23:59 del dia 1 - cambia T, L, I, M
         # ODE es **evaluada** en todos los t que pertenezcan a las 00hrs y las 23:59 del dia 1
             # evaluada == soluciones q retorna
+            # obj: ODE se evalua en los t que la data recibida del paciente
+                # P/? - operación módulo seguirá funcionando correctamente?
 
     for iteraciones in range(p.iteraciones_tot):
 
@@ -110,7 +113,15 @@ def emulador_odeint(t, y0, parametros): # y(t)
 
         if p.dosis_total != 0: # si hay dosis se irradia, sino solo se resuelve la edo directamente.
 
-            if p.dosis_pendientes != 0 and (t)%7 in p.dias_irradia_week: #"t%7": evalua si dia t toca irradiar o no
+            if p.dosis_pendientes != 0 and dia_actual%7 in p.dias_irradia_week:
+                    # "dia_actual%7": evalua si dia t toca irradiar o no
+
+                ## FLUJO
+                # dia_actual siempre serán números enteros, plt la operación módulo funcionará como
+                # se espera. Ahora los tiempos en que evaluaremos las ODE no necesariamente serán
+                # enteros, por lo q deberemos procurar obtener todas esas soluciones de las ODE,
+                # i.e. todas las soluciones de las ODE durante un día, antes de pasar al siguiente
+                # dia y volver a aplicar la radiación a las 00hrs.
 
                 p.dosis_pendientes-=1
 
@@ -129,6 +140,10 @@ def emulador_odeint(t, y0, parametros): # y(t)
 
         y0 = np.array([T, L, M, I]) #Condiciones iniciales
             # La fx recibe y0, pero no me sirven xq son antes de pasar por la rad.
+
+        # P. Definimos un array con los t a evaluar dentro de un MISMO día
+            # i.e definimos un t_eval para solve_ivp personalizado para c/día.
+
 
         sol = solve_ivp(rhs, (t,t+1), y0, t_eval = np.array([t+1]), max_step = 0.001)
         #t_eval = t, q me entrega, en q se evalua edo (puede evaluar en más puntos, xq eso lo define
