@@ -5,6 +5,7 @@ from scipy.integrate import solve_ivp #solve_ivp tiene más cosas q odeint
 from Pandas_y_linfocitos import rad_linfo
 from lmfit import Parameters
 import parametros as p
+from crear_array_t_eval import crear_array_t_eval
 
 
 ## Repetiremos lo del archivos "ODEs_y_rad_v2.py" pero usando la clase Parameters
@@ -141,11 +142,14 @@ def emulador_odeint(t, y0, parametros): # y(t)
         y0 = np.array([T, L, M, I]) #Condiciones iniciales
             # La fx recibe y0, pero no me sirven xq son antes de pasar por la rad.
 
-        # P. Definimos un array con los t a evaluar dentro de un MISMO día
+        # Creamos un array con todos los tiempos que están dentro de dia_actual
             # i.e definimos un t_eval para solve_ivp personalizado para c/día.
 
+        v_array_t_eval = crear_array_t_eval(dia_actual, t)
 
-        sol = solve_ivp(rhs, (t,t+1), y0, t_eval = np.array([t+1]), max_step = 0.001)
+        sol = solve_ivp(rhs, (dia_actual, dia_actual+1), y0,
+                        t_eval = v_array_t_eval, max_step = 0.001)
+
         #t_eval = t, q me entrega, en q se evalua edo (puede evaluar en más puntos, xq eso lo define
         # inteligentemente solve_ivp internamente, solo q no me los entrega); ese t tiene q estar
         # dentro d (t,t+1) solve_ivp integra, i.e. obtiene sols en (t,t+1) y luego evalua eso
@@ -172,7 +176,7 @@ def emulador_odeint(t, y0, parametros): # y(t)
         I = sol.y[3][0]   #Dos formas distintas de extraer el número del array d 1d que devuelve.
                         # i.e. xq una tupla de un elemento necesita la coma tipo A,
 
-        t += 1 #para que en el siguiente intervalor se evalue en el segundo siguiente
+        dia_actual += 1 # para que en el siguiente intervalo se evalue en el día siguente
 
 
     return sol_y
