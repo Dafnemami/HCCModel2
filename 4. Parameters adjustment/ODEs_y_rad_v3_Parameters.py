@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp #solve_ivp tiene más cosas q odeint
 
-from Pandas_y_linfocitos import rad_linfo
+from Pandas_y_linfocitos_Parameters import rad_linfo
 from lmfit import Parameters
 import parametros as p
 from crear_array_t_eval import crear_array_t_eval
@@ -35,12 +35,12 @@ def rhs(t, y, parametros): # right hand side of the ode
         s = parametros['s'].value
         omega_1 = parametros['omega_1'].value # se vuelve a ajustar cn GRID SEARCH
 
-        alpha_T = parametros['alpha_T'] # RADIACIÓN
+        # P. alpha_T es un valor dado y no lo voy a ajustar con este método por ahora
 
             ########################################
             # ? - No sé como ajusta con el método de powell para la minimización
             # del residuo a parámetros que se encuentran fuera de las ODEs
-            # acá señaladas.
+            # acá señaladas. Q es lo q ocurre con alpha_T
 
             # Puedo trabajar con valores iniciales alpha_T=alpha_L = .037
             # pero dsp de eso no sé q hacer para fittear alpha_T
@@ -85,6 +85,8 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
     2. y0 = np.array([T,L,M,I]) #Condiciones iniciales
           --> este parámetro NO SE OCUPA, pues el y0 q me sirve es el de dsp de la primera
           dosis de rad, y el que le llega a esta fx corresponde a antes de ello.
+          --> igual me serviria para definir "#### C.ios ########" pero decidí
+          obtener esos valores de "parametros.py"
 
     3. parametros --> los recibe para que solve_ivp se los entregue a rhs
 

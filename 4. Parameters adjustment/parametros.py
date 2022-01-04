@@ -45,11 +45,18 @@ I = 0                 # T deaths = 0 at the beginning
 #### PARÁMETROS RADIATION KILL
 
 # T, I
-alpha_T = .139  ##[Gy**-1] #tumor-LQ(linear quadratic) cell kill
+alpha_T = .037  ##[Gy**-1] #tumor-LQ(linear quadratic) cell kill
+    # P. Este valor no debería estar acá, sino q como un parametros en dict
+    # v_parametros de la clase Parameters
+
 beta_T = alpha_T/14.3  ##[Gy**-2]
 
 # L
 #alpha_L se define en la función rad_linfo
+    ## Recomendación ignacio 04/01/2022
+    # dejar alpha_L con un valor un poco mayor o igual a alpha_T
+        # mjr igual al ppio.
+
 
 
 #### PARÁMETROS ODE'S
@@ -78,7 +85,7 @@ r = 0.14 ##[days**-1] #half life of 5 days
 
 #### INPUTS Y VALORES INICIALES
 
-t = 0 #tiempo inicial de evaluación
+t = 0 # día/tiempo inicial de evaluación
 
 
 #### RADIATION KILL
