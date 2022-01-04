@@ -36,6 +36,18 @@ def rhs(t, y, parametros): # right hand side of the ode
         omega_1 = parametros['omega_1'].value # se vuelve a ajustar cn GRID SEARCH
 
         alpha_T = parametros['alpha_T'] # RADIACIÓN
+
+            ########################################
+            # ? - No sé como ajusta con el método de powell para la minimización
+            # del residuo a parámetros que se encuentran fuera de las ODEs
+            # acá señaladas.
+
+            # Puedo trabajar con valores iniciales alpha_T=alpha_L = .037
+            # pero dsp de eso no sé q hacer para fittear alpha_T
+
+            #  Quizá los "patters of faliure" me puedan ser útiles para ajustar alpha_T
+            ########################################
+
         # alpha_L se busca con grid search
 
     except KeyError: # uso incorrecto o inválido de llaves (keys) en diccionarios
@@ -60,7 +72,7 @@ def rhs(t, y, parametros): # right hand side of the ode
 
 
 
-def emulador_odeint(t, y0, parametros): # y(t)
+def emulador_odeint(t: np.array, y0, parametros): # y(t)
     # antes "sol_ode_en_t" en 'ODEs_y_rad_v2.py'
 
     ''' Esto es necesario porque la función residuo necesita una función que
@@ -68,10 +80,10 @@ def emulador_odeint(t, y0, parametros): # y(t)
     - Solution to the ODE y'(t) = f(t,y,k) with initial condition y(0) = y0
     para un array de tiempos a evaluar uno a uno con solve_ivp.
 
-    1. t --> <class 'numpy.ndarray'>  --
+    1. t --> <class 'numpy.ndarray'>
 
     2. y0 = np.array([T,L,M,I]) #Condiciones iniciales
-          --> este parámetro no se ocupa, pues el y0 q me sirve es el de dsp de la primera
+          --> este parámetro NO SE OCUPA, pues el y0 q me sirve es el de dsp de la primera
           dosis de rad, y el que le llega a esta fx corresponde a antes de ello.
 
     3. parametros --> los recibe para que solve_ivp se los entregue a rhs
@@ -175,7 +187,7 @@ def emulador_odeint(t, y0, parametros): # y(t)
         sol_y_L = np.append(sol_y_L, sol.y[1]) #(lo q tgo, lo q quiero agregar)
         sol_y_M = np.append(sol_y_M, sol.y[2])
         sol_y_I = np.append(sol_y_I, sol.y[3])
-        sol_t = np.append(sol_t, sol.t)  #sol.t guarda el t q le doy a t_eval en solve_ivp
+        sol_t = np.append(sol_t, sol.t)  #sol.t guarda los t q le doy a t_eval en solve_ivp
 
 
         # T,L,M,I: Actualizar CI para sgte iteración
