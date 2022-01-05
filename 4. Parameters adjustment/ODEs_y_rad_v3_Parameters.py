@@ -239,7 +239,7 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
                                 # i.e. xq una tupla de un elemento necesita la coma tipo A,
 
                 # Obs: En el caso de RAD, se actualizan las nuevas C.I. al resolver
-                # las ecs. de rad.
+                # las ecs. de rad..
 
         dia_actual += 1 # para que en el siguiente intervalo se evalue en el día siguente
 
