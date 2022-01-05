@@ -66,6 +66,8 @@ def residuo(parametros, t, data):
     ## FLUJO:
     # Defino el modelo matemático de los datos (antes: f(x) = x**2 por ejemplo. ahora: ODE's)
     modelo = emulador_odeint(t, y0, parametros) # Esto arroja un arreglo (np.array)
+    print(f'-----------------------------')
+    print(f'modelo/resultado: {modelo}')
 
 
     ## FLUJO:
@@ -126,12 +128,50 @@ v_parametros.add('omega_1', value = 1, min=10 **(-3), max=10) # se volverá a aj
             # En nuestro caso "powell"
 
 resultado = minimize(residuo, v_parametros, args=(t_medido, y_medido_L), method='powell')
-    # todo: revisar el error que proviene desde "solve_ivp
-
+print('im done con RESULTADO')
     # Obs:
     # t_medido & y_medido_L son los datos empíricos
         # (por ahora la curva fitteada de la fig. 3b paper HCC sung)
     # residuo tiene el modelo: ODE's + rad
+
+
+
+
+########### SECCIÓN #############
+### ESTADÍSTICA DE RESULTADOS ###
+#################################
+
+## display fitted statistics
+report_fit(resultado) # arroja un printeable q me describe muchas cosas sobre el fit
+
+
+
+
+
+############## SECCIÓN ###############
+### CHECKEAR RESULTADOS DEL FITTEO ###
+######################################
+
+## FLUJO
+# Una vez que ya encontramos los mejores parámetros resolvemos con esos valores:
+
+ # check results of the fit -> ocupo 'resultado' q se obtuvo ocupando clase 'minimize'
+
+y0 = np.array([p.T, p.L, p.M, p.I])
+    # pero ojo q dentro de las funciones se ocupan las C.I como objetos clases Parameter
+    # dentro de una tupla llamada y0 --> ? no tendré problemas con eso?
+
+fitted_data = emulador_odeint(t_medido, y0, resultado.params)
+    # obs: minimizer retorna un objeto de clase MiniizerResult
+    # y para obtener los parámetros debemos llamar a su atributo "params"
+    # todo
+    ## AttributeError: 'MinimizerResult' object has no attribute 'v_parametros'
+
+
+    # ese y0 es el array que definimos como variable global.
+    # no son los objetos Parameter q ocupan las funciones antes.
+
+
 
 
 
@@ -147,8 +187,18 @@ plt.scatter(t_medido, y_medido_L, marker='o', color='b', label='measured data', 
     # Se hace para ver en el plot la data REAL junto cn el mjr fitteo q encontramos.
 
 
-# todo: PRIORIDAD --> TERMINAR ESTE CÓDIGO.
+## Gráfico fitted results:
+# Plot fitted data
+plt.plot(t_medido, fitted_data[:, 1], '-', linewidth=2, color='red', label='fitted data')
+plt.legend()
 
-
-
+## Show plots
 plt.show()
+
+
+
+
+
+
+
+

@@ -94,6 +94,9 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
       i.e. un array de arrays del tipo [T, L, M, I] de largo t_data (t_medido)
     '''
 
+    #print(f'largo t_medido: {len(t)}')
+    #print(f't_medido: {t}')
+
     #### C.ios ########
     T = p.T
     L = p.L
@@ -126,7 +129,15 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
             # obj: ODE se evalua en los t que la data recibida del paciente
                 # P/? - operación módulo seguirá funcionando correctamente?
 
-    for iteraciones in range(p.iteraciones_tot):
+    largo_t_aux = 0
+
+    for iteraciones in range(int(t[-1]) + 1):
+        # Deben haber tantos ciclos de este for como días deban pasar.
+            # obs: dias == cant de veces q se aplica rad =! veces q se resuelven ODE's
+
+        # obs jiji
+        ## acepté no más q  el range necesitaba "+1" para completar todos los días,
+        ## pero no lo pensé más alla.
 
         # SECCIÓN: RADIATION KILL'S RESOLUTION PER TYPE OF CELL
 
@@ -166,6 +177,8 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
         v_array_t_eval = crear_array_t_eval(dia_actual, t)
         #print(f'iteración n°: {iteraciones}')
         #print(f'v_array_eval: {v_array_t_eval}')
+        largo_t_aux += len(v_array_t_eval)
+        #print(f'largo_t_aux: {largo_t_aux}')
 
         ## Sobre el por qué del siguiente FLUJO:
         # Obs: Hay veces que ocurrirá que no hay datos empíricos sobre un día en pclar
@@ -229,6 +242,7 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
 
         dia_actual += 1 # para que en el siguiente intervalo se evalue en el día siguente
 
+    #print(f'len(sol_y: {len(sol_y)}')
 
     return sol_y
 
