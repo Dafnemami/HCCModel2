@@ -30,7 +30,7 @@ if __name__ == "__main__":
 
     t_medido_aux = np.array([3, 3.3, 5.1, 5.7, 5.9, 6.7, 9])
 
-    v_array_t_eval = crear_array_t_eval(5, t_medido_aux)
+    v_array_t_eval = crear_array_t_eval(3, t_medido_aux)
 
     print(v_array_t_eval)
 
