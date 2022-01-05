@@ -173,9 +173,10 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
         # ni guardar aquellos resultados en los arrays
 
 
-        if v_array_t_eval != np.array([]):
+        if len(v_array_t_eval) != 0:
 
             for t_a_evaluar in v_array_t_eval:
+                print(f'im in "for t_evaluar"')
 
                 y0 = np.array([T, L, M, I])  # Condiciones iniciales
                 # La fx recibe y0, pero no me sirven xq son antes de pasar por la rad.
@@ -239,7 +240,7 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
                                 # i.e. xq una tupla de un elemento necesita la coma tipo A,
 
                 # Obs: En el caso de RAD, se actualizan las nuevas C.I. al resolver
-                # las ecs. de rad..
+                # las ecs. de rad.
 
         dia_actual += 1 # para que en el siguiente intervalo se evalue en el día siguente
 
