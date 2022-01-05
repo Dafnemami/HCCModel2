@@ -66,8 +66,8 @@ def residuo(parametros, t, data):
     ## FLUJO:
     # Defino el modelo matemático de los datos (antes: f(x) = x**2 por ejemplo. ahora: ODE's)
     modelo = emulador_odeint(t, y0, parametros) # Esto arroja un arreglo (np.array)
-    print(f'-----------------------------')
-    print(f'modelo/resultado: {modelo}')
+    #print(f'-----------------------------')
+    #print(f'modelo/resultado: {modelo}')
 
 
     ## FLUJO:
@@ -128,6 +128,7 @@ v_parametros.add('omega_1', value = 1, min=10 **(-3), max=10) # se volverá a aj
             # En nuestro caso "powell"
 
 resultado = minimize(residuo, v_parametros, args=(t_medido, y_medido_L), method='powell')
+    # obs: minimizer retorna un objeto de clase MiniizerResult
 print('im done con RESULTADO')
     # Obs:
     # t_medido & y_medido_L son los datos empíricos
@@ -162,13 +163,10 @@ y0 = np.array([p.T, p.L, p.M, p.I])
     # dentro de una tupla llamada y0 --> ? no tendré problemas con eso?
 
 fitted_data = emulador_odeint(t_medido, y0, resultado.params)
-    # obs: minimizer retorna un objeto de clase MiniizerResult
-    # y para obtener los parámetros debemos llamar a su atributo "params"
-    # todo
-    ## AttributeError: 'MinimizerResult' object has no attribute 'v_parametros'
+        # obs: minimizer retorna un objeto de clase MiniizerResult...
+        # y para obtener los parámetros debemos llamar a su atributo "params"
 
-
-    # ese y0 es el array que definimos como variable global.
+    # Ese y0 es el array que definimos como variable global.
     # no son los objetos Parameter q ocupan las funciones antes.
 
 
