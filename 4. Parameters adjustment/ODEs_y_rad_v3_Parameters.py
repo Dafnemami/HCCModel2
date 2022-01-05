@@ -164,19 +164,19 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
             # i.e definimos un t_eval para solve_ivp personalizado para c/día.
 
         v_array_t_eval = crear_array_t_eval(dia_actual, t)
-        print(f'iteración n°: {iteraciones}')
-        print(f'v_array_eval: {v_array_t_eval}')
+        #print(f'iteración n°: {iteraciones}')
+        #print(f'v_array_eval: {v_array_t_eval}')
 
-        #TODO -- PRIORITARIO
+        ## Sobre el por qué del siguiente FLUJO:
         # Obs: Hay veces que ocurrirá que no hay datos empíricos sobre un día en pclar
         # En estos casos debemos aplicar radiación al paciente mas no resolver las ODE's
         # ni guardar aquellos resultados en los arrays
 
 
-        if len(v_array_t_eval) != 0: #
+        if len(v_array_t_eval) != 0:
 
             for t_a_evaluar in v_array_t_eval:
-                print(f'im in "for t_evaluar"')
+                #print(f'im in "for t_evaluar"')
 
                 y0 = np.array([T, L, M, I])  # Condiciones iniciales
                 # La fx recibe y0, pero no me sirven xq son antes de pasar por la rad.
@@ -185,22 +185,7 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
                                 t_eval = np.array([t_a_evaluar]), max_step = 0.001, args=(parametros, )
                                 )
 
-
-                # todo: PROBLEMA
-                # iteración n°: 0
-                # sol_y: [8.26890900e+10 1.94990897e+10 9.91703453e+07 1.62638130e+10]
-                # iteración n°: 1
-                # iteración n°: 2
-                # iteración n°: 3
-                # iteración n°: 4
-                # iteración n°: 5
-                # sol_y en la ite n°5: [8.26890900e+10 1.94990897e+10 9.91703453e+07 1.62638130e+10]
-                # sol_y: [[8.26890900e+10 1.94990897e+10 9.91703453e+07 1.62638130e+10]
-                #  [7.67985627e+09 8.33697365e+10 1.90555354e+07 5.31126777e+10]]
-
-
-
-                # obs: en solve_ivp "arg" son entregados a la fx "rhs"
+                    # obs: en solve_ivp "arg" son entregados a la fx "rhs"
 
                 #t_eval = t, q me entrega, en q se evalua edo (puede evaluar en más puntos, xq eso lo define
                 # inteligentemente solve_ivp internamente, solo q no me los entrega); ese t tiene q estar
@@ -221,8 +206,8 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
                         # np.vstack concatena arrays en vertical sin juntarnos en un solo arrays,
                         # q es lo q hace "append"
 
-                print(f'sol_y after ite n°{iteraciones}: {sol_y}')
 
+                #print(f'sol_y after ite n°{iteraciones}: {sol_y}')
 
 
                 sol_y_T = np.append(sol_y_T, sol.y[0]) # Append para arrays
