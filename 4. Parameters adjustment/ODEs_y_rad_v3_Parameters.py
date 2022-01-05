@@ -128,11 +128,6 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
 
     for iteraciones in range(p.iteraciones_tot):
 
-
-        print(f'iteración n°: {iteraciones}')
-
-
-
         # SECCIÓN: RADIATION KILL'S RESOLUTION PER TYPE OF CELL
 
         if p.dosis_total != 0: # si hay dosis se irradia, sino solo se resuelve la edo directamente.
@@ -159,77 +154,92 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
                     #TOMANDO Linicial como L dsp de una iteración EDO (con s=0), se comprobó
                     # que este valor es correcto dsp de la primera radiación.
 
+                # Obs: En el caso de RAD, se actualizan las nuevas C.I. al resolver
+                # las ecs. de rad.
+
 
         # SECCIÓN: Ode's
-
-        y0 = np.array([T, L, M, I]) #Condiciones iniciales
-            # La fx recibe y0, pero no me sirven xq son antes de pasar por la rad.
 
         # Creamos un array con todos los tiempos que están dentro de dia_actual
             # i.e definimos un t_eval para solve_ivp personalizado para c/día.
 
         v_array_t_eval = crear_array_t_eval(dia_actual, t)
+        print(f'iteración n°: {iteraciones}')
+        print(f'v_array_eval: {v_array_t_eval}')
 
-        for t_a_evaluar in v_array_t_eval:
-
-            sol = solve_ivp(rhs, (dia_actual, dia_actual+1), y0,
-                            t_eval = np.array([t_a_evaluar]), max_step = 0.001, args=(parametros, )
-                            )
-
-        #todo: ahora solve_ivp debe retornar los resultados de una forma distinta, pues
-        # le estoy entregando UN ARRAY de tiempos a evaluar y no uno en particular cmo antes.
-
-            # obs: en solve_ivp "arg" son entregados a la fx "rhs"
-
-        #t_eval = t, q me entrega, en q se evalua edo (puede evaluar en más puntos, xq eso lo define
-        # inteligentemente solve_ivp internamente, solo q no me los entrega); ese t tiene q estar
-        # dentro d (t,t+1) solve_ivp integra, i.e. obtiene sols en (t,t+1) y luego evalua eso
-        # en t_eval.
-        #Devuelve sol.y -> array [[T][L][M][I]]) , sol.t -> array [t]
-
-        #Añadir resultados a array para gráficar
-            # solo este me interesa retornar.
-             # (solve_ivp arroja muchas cosas cmo un reporte general "sol.y")
+        #TODO -- PRIORITARIO
+        # Obs: Hay veces que ocurrirá que no hay datos empíricos sobre un día en pclar
+        # En estos casos debemos aplicar radiación al paciente mas no resolver las ODE's
+        # ni guardar aquellos resultados en los arrays
 
 
-            if iteraciones == 0:
-                sol_y = np.array([ sol.y[0][0], sol.y[1][0], sol.y[2][0], sol.y[3][0] ])
-            elif iteraciones > 0:
-                print(f'sol_y en la ite n°1: {sol_y}')
-                sol_y = np.vstack( (sol_y,
-                                    np.array([sol.y[0][0], sol.y[1][0], sol.y[2][0], sol.y[3][0]])) )
-                    # np.vstack concatena arrays en vertical sin juntarnos en un solo arrays,
-                    # q es lo q hace "append"
+        if v_array_t_eval != np.array([]):
+
+            for t_a_evaluar in v_array_t_eval:
+
+                y0 = np.array([T, L, M, I])  # Condiciones iniciales
+                # La fx recibe y0, pero no me sirven xq son antes de pasar por la rad.
+
+                sol = solve_ivp(rhs, (dia_actual, dia_actual+1), y0,
+                                t_eval = np.array([t_a_evaluar]), max_step = 0.001, args=(parametros, )
+                                )
 
 
-
-            print(f'sol_y: {sol_y}')
+                # todo: PROBLEMA
+                # iteración n°: 0
+                # sol_y: [8.26890900e+10 1.94990897e+10 9.91703453e+07 1.62638130e+10]
+                # iteración n°: 1
+                # iteración n°: 2
+                # iteración n°: 3
+                # iteración n°: 4
+                # iteración n°: 5
+                # sol_y en la ite n°5: [8.26890900e+10 1.94990897e+10 9.91703453e+07 1.62638130e+10]
+                # sol_y: [[8.26890900e+10 1.94990897e+10 9.91703453e+07 1.62638130e+10]
+                #  [7.67985627e+09 8.33697365e+10 1.90555354e+07 5.31126777e+10]]
 
 
 
-            #todo
-            # Sobre el error
-            # Muere en la iteración n°1 que es LA SEGUNDA
-                # ValueError: need at least one array to concatenate
-                ## the problem comes from the lenght of your array.
-                # Check if your array/list is longer than to 0
+                # obs: en solve_ivp "arg" son entregados a la fx "rhs"
 
-            # ? - tgo la duda si va a mantener la separación [[T,L,M,I] [T,L,M,I]...]
-            # o si va a dejarlo cmo [T,L,M,I,T,L,M,I]
+                #t_eval = t, q me entrega, en q se evalua edo (puede evaluar en más puntos, xq eso lo define
+                # inteligentemente solve_ivp internamente, solo q no me los entrega); ese t tiene q estar
+                # dentro d (t,t+1) solve_ivp integra, i.e. obtiene sols en (t,t+1) y luego evalua eso
+                # en t_eval.
+                #Devuelve sol.y -> array [[T][L][M][I]]) , sol.t -> array [t]
 
-            sol_y_T = np.append(sol_y_T, sol.y[0]) # Append para arrays
-            sol_y_L = np.append(sol_y_L, sol.y[1]) #(lo q tgo, lo q quiero agregar)
-            sol_y_M = np.append(sol_y_M, sol.y[2])
-            sol_y_I = np.append(sol_y_I, sol.y[3])
-            sol_t = np.append(sol_t, sol.t)  #sol.t guarda los t q le doy a t_eval en solve_ivp
+                #Añadir resultados a array para gráficar
+                    # solo este me interesa retornar.
+                     # (solve_ivp arroja muchas cosas cmo un reporte general "sol.y")
 
 
-            # T,L,M,I: Actualizar CI para sgte iteración
-            T, = sol.y[0]     #T,L = (T,L) 'Tupla'; Si [a,b] => T,L = [a,b] es T = a y L = b
-            L, = sol.y[1]
-            M, = sol.y[2]
-            I = sol.y[3][0]   #Dos formas distintas de extraer el número del array d 1d que devuelve.
-                            # i.e. xq una tupla de un elemento necesita la coma tipo A,
+                if iteraciones == 0:
+                    sol_y = np.array([ sol.y[0][0], sol.y[1][0], sol.y[2][0], sol.y[3][0] ])
+                elif iteraciones > 0:
+                    sol_y = np.vstack( (sol_y,
+                                        np.array([sol.y[0][0], sol.y[1][0], sol.y[2][0], sol.y[3][0]])) )
+                        # np.vstack concatena arrays en vertical sin juntarnos en un solo arrays,
+                        # q es lo q hace "append"
+
+                print(f'sol_y after ite n°{iteraciones}: {sol_y}')
+
+
+
+                sol_y_T = np.append(sol_y_T, sol.y[0]) # Append para arrays
+                sol_y_L = np.append(sol_y_L, sol.y[1]) #(lo q tgo, lo q quiero agregar)
+                sol_y_M = np.append(sol_y_M, sol.y[2])
+                sol_y_I = np.append(sol_y_I, sol.y[3])
+                sol_t = np.append(sol_t, sol.t)  #sol.t guarda los t q le doy a t_eval en solve_ivp
+
+
+                # T,L,M,I: Actualizar CI para sgte iteración
+                T, = sol.y[0]     #T,L = (T,L) 'Tupla'; Si [a,b] => T,L = [a,b] es T = a y L = b
+                L, = sol.y[1]
+                M, = sol.y[2]
+                I = sol.y[3][0]   #Dos formas distintas de extraer el número del array d 1d que devuelve.
+                                # i.e. xq una tupla de un elemento necesita la coma tipo A,
+
+                # Obs: En el caso de RAD, se actualizan las nuevas C.I. al resolver
+                # las ecs. de rad.
 
         dia_actual += 1 # para que en el siguiente intervalo se evalue en el día siguente
 
