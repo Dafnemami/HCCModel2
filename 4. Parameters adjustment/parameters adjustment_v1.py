@@ -93,10 +93,52 @@ t_medido, y_medido_L = cargar_datos_pacientes("Sung figs 3 digitalized points.xl
     # Data centro de cancer UC -> PENDIENTE -> Cir.L levels in blood during & after radiothe.
 
 
+## FLUJO
+# set parameters including bounds; you can also fix parameters using vary=False
+v_parametros = Parameters()  # Guarda los parámetros y luego lo llamas cmo un dict
+
+
+# Lo cual nos sirve para agregar a "v_parametros" a los parámetros con valor fijo.
+# Añadimos las C.I. como parámetros fijos (FIXED)
+v_parametros.add('T0', value = p.T, vary = False) # FIXED PARAMETER -> vary = False
+v_parametros.add('L0', value = p.L, vary = False)
+v_parametros.add('M0', value = p.M, vary = False)
+v_parametros.add('I0', value = p.I, vary = False)
+
+
+# Además:
+# Añadimos los parámetros a ajustar EN ESTE CICLO (i.e. vamos a encontrar su valor)
+v_parametros.add('omega_2', value = 1, min=10 **(-3), max=10)
+v_parametros.add('omega_3', value = 1, min=10 **(-3), max=10)
+v_parametros.add('g', value = 1, min=10 ** 8, max=10 ** 14)
+v_parametros.add('s', value = 1, min=0, max=10 ** 14) # P. restricciones las inventé
+v_parametros.add('omega_1', value = 1, min=10 **(-3), max=10) # se volverá a ajustar cn GRID SEARCH
+
+
+## FLUJO
+# Instanciamos a minimize qn toma una fx objetivo, la función denominada "residuo" en nuestro caso,
+# qn calcula un array, que es el RESIDUO entre la data y los resultados que entrega el
+# modelo ODE's + rad. Luego, minimize buscará MINIMIZAR aquel residuo (array)
+
+    # Obs sobre minimize:
+        # 1. clase 'minimize' (recordar q hay otra q se llama Minimize)
+        # 2. Le tengo que pedir cn q MÉTODO ENCONTRARÁ los valores de los parámetros q busco definir
+            # En nuestro caso "powell"
+
+resultado = minimize(residuo, v_parametros, args=(t_medido, y_medido_L), method='powell')
+    # todo: revisar el error que proviene desde "solve_ivp
+
+    # Obs:
+    # t_medido & y_medido_L son los datos empíricos
+        # (por ahora la curva fitteada de la fig. 3b paper HCC sung)
+    # residuo tiene el modelo: ODE's + rad
+
+
 
 ######### SECCIÓN ############
-#### AJUSTE DE PARÁMETROS ####
+### GRÁFICOS DE RESULTADOS ###
 ##############################
+
 
 ## Gráfico Data:
 plt.figure() # -> ? NO SÉ K HACE ESTO
@@ -106,3 +148,7 @@ plt.scatter(t_medido, y_medido_L, marker='o', color='b', label='measured data', 
 
 
 # todo: PRIORIDAD --> TERMINAR ESTE CÓDIGO.
+
+
+
+plt.show()
