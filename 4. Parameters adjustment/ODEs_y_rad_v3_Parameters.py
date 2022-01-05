@@ -173,7 +173,7 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
         # ni guardar aquellos resultados en los arrays
 
 
-        if len(v_array_t_eval) != 0:
+        if len(v_array_t_eval) != 0: #
 
             for t_a_evaluar in v_array_t_eval:
                 print(f'im in "for t_evaluar"')
