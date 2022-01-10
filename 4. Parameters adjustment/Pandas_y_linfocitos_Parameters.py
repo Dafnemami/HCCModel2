@@ -37,7 +37,7 @@ def rad_linfo(name_excel,cols,Ln):
         # dejar alpha_L con un valor un poco mayor o igual a alpha_T
             # mjr igual al ppio.
 
-    alpha_L = .037
+    alpha_L = .737 # todo
     Lnplusone = 0
     Lrkill = pd.read_excel(name_excel, sheet_name = 1) #abrir excel, página 1 (cuenta desde 0)
     df = pd.DataFrame(Lrkill) # Formato para trabajar cn los datos

@@ -45,7 +45,8 @@ I = 0                 # T deaths = 0 at the beginning
 #### PARÁMETROS RADIATION KILL
 
 # T, I
-alpha_T = .037  ##[Gy**-1] #tumor-LQ(linear quadratic) cell kill
+    # todo
+alpha_T = .139  ##[Gy**-1] #tumor-LQ(linear quadratic) cell kill
     # P. Este valor no debería estar acá, sino q como un parametros en dict
     # v_parametros de la clase Parameters
 

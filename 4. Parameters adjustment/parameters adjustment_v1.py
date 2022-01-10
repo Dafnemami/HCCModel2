@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from lmfit import minimize, Parameters, report_fit
-from scipy.integrate import solve_ivp
 from cargar_datos_pacientes import cargar_datos_pacientes
 from ODEs_y_rad_v3_Parameters import emulador_odeint
 import parametros as p
@@ -42,6 +41,7 @@ import parametros as p
 
 
 def residuo(parametros, t, data):
+    # todo uso de args acá.
     '''Calcula el residuo entre la data (datos empíricos) con los resultados
     que entrega la simulación de ODE en los t que se tiene para la data.
     El residuo lo retorna como un array, x medio de la fx ".ravel()",
@@ -68,20 +68,23 @@ def residuo(parametros, t, data):
     modelo = emulador_odeint(t, y0, parametros) # Esto arroja un arreglo (np.array)
     #print(f'-----------------------------')
     #print(f'modelo/resultado: {modelo}')
+    #print(f'modelo/resultado largo {len(modelo[:, 1])}')
 
 
     ## FLUJO:
     # La data que tengo solo corresponde a los linfocitos, por lo tanto solo puedo sacar
     # el residuo entre el conteo empírico de los L y los resultados de ese conteo de L
     # que obtuve con las ODEs
-
-    modelo_para_L = modelo[:, 1] # todo: entender q hago acá. #2  -- Listoco: explained above
+    modelo_para_L = modelo[:, 1]
         # Esto recorre cada elemento ":" del array y va extrayendo el elemento
         # en pos 1 ",1" (q es dnd están los linfocitos)
 
-
-    return (modelo_para_L - data).ravel()
-    # Parece calcular el residuo entre actual and fitted data
+    #return (modelo_para_L - data).ravel()
+    # Calcula el residuo entre actual and fitted data
+    ## SOBRE .ravel()
+    # ravel flattens the result between data and simulations's output
+        # i.e. it forces to being in 1D
+    return ( (modelo_para_L - data) ** 2 ).ravel() #todo: minimiza cuadrado de la diferencia
 
 
 
@@ -93,6 +96,10 @@ t_medido, y_medido_L = cargar_datos_pacientes("Sung figs 3 digitalized points.xl
 
     # Eventualmente acá se leerán los datos de pacientes con HCC del Centro de Cancer UC
     # Data centro de cancer UC -> PENDIENTE -> Cir.L levels in blood during & after radiothe.
+
+## FRIENDLY REMINDER:
+    # data está NORMALIZADA, plt ocuparemos:
+y_medido_L_no_normalizado = y_medido_L * p.L
 
 
 ## FLUJO
@@ -110,11 +117,11 @@ v_parametros.add('I0', value = p.I, vary = False)
 
 # Además:
 # Añadimos los parámetros a ajustar EN ESTE CICLO (i.e. vamos a encontrar su valor)
-v_parametros.add('omega_2', value = 1, min=10 **(-3), max=10)
-v_parametros.add('omega_3', value = 1, min=10 **(-3), max=10)
-v_parametros.add('g', value = 1, min=10 ** 8, max=10 ** 14)
-v_parametros.add('s', value = 1, min=0, max=10 ** 14) # P. restricciones las inventé
-v_parametros.add('omega_1', value = 1, min=10 **(-3), max=10) # se volverá a ajustar cn GRID SEARCH
+v_parametros.add('omega_2', value = 0.003, min=10 **(-3), max=10)
+v_parametros.add('omega_3', value = 0.009, min=10 **(-3), max=10)
+v_parametros.add('g', value = 7.33 * 10** 10 , min=10 ** 8, max=10 ** 14)
+v_parametros.add('s', value = 1.47 * 10 ** 8, min=0, max=10 ** 14) # P. restricciones las inventé
+v_parametros.add('omega_1', value = 0.119, min=10 **(-3), max=10) # se volverá a ajustar cn GRID SEARCH
 
 
 ## FLUJO
@@ -127,8 +134,11 @@ v_parametros.add('omega_1', value = 1, min=10 **(-3), max=10) # se volverá a aj
         # 2. Le tengo que pedir cn q MÉTODO ENCONTRARÁ los valores de los parámetros q busco definir
             # En nuestro caso "powell"
 
-resultado = minimize(residuo, v_parametros, args=(t_medido, y_medido_L), method='powell')
+resultado = minimize(residuo, v_parametros,
+                     args=(t_medido, y_medido_L_no_normalizado), method='powell')
     # obs: minimizer retorna un objeto de clase MiniizerResult
+    # obs: "residuo" == Objective function to be minimized
+    # obs: "args" == Positional arguments to pass to objetive fx "residuo"
 print('im done con RESULTADO')
     # Obs:
     # t_medido & y_medido_L son los datos empíricos
@@ -163,6 +173,8 @@ y0 = np.array([p.T, p.L, p.M, p.I])
     # dentro de una tupla llamada y0 --> ? no tendré problemas con eso?
 
 fitted_data = emulador_odeint(t_medido, y0, resultado.params)
+print(f'fitted data: Resultados para L')
+print(fitted_data[:, 1])
         # obs: minimizer retorna un objeto de clase MiniizerResult...
         # y para obtener los parámetros debemos llamar a su atributo "params"
 
@@ -180,7 +192,7 @@ fitted_data = emulador_odeint(t_medido, y0, resultado.params)
 
 ## Gráfico Data:
 plt.figure() # -> ? NO SÉ K HACE ESTO
-plt.scatter(t_medido, y_medido_L, marker='o', color='b', label='measured data', s= 30)
+plt.scatter(t_medido, y_medido_L_no_normalizado, marker='o', color='b', label='measured data', s= 30)
     # plt.scatter -> A scatter plot of y vs. x with varying marker size and/or color.
     # Se hace para ver en el plot la data REAL junto cn el mjr fitteo q encontramos.
 

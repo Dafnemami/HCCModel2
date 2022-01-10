@@ -1,9 +1,7 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp #solve_ivp tiene más cosas q odeint
 
 from Pandas_y_linfocitos_Parameters import rad_linfo
-from lmfit import Parameters
 import parametros as p
 from crear_array_t_eval import crear_array_t_eval
 
@@ -98,10 +96,10 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
     #print(f't_medido: {t}')
 
     #### C.ios ########
-    T = p.T
-    L = p.L
-    M = p.M
-    I = p.I
+    T = y0[0] ## ANTES: importaba datos desde "parametros.py"
+    L = y0[1]
+    M = y0[2]
+    I = y0[3]
     dia_actual = p.t # día/tiempo inicial == 0
 
     #### Arrays a retornar
@@ -114,12 +112,8 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
 
     #### Tiempos a evaluar
     'llega t_medido==datos empíricos (un array), pues esta función antes contenía a ' \
-    'odeint el cual trabaja con t==array. Plt, en el codigo a continuación ' \
-    'P. usaré iteradores para recorrer el array del tiempo'
+    'odeint el cual trabaja con t==array.'
 
-    'P. !!! creo q puedo pedirle a evalue más cosas a solve_ivp dentro de un día, con t_eval,' \
-    'así respetaamos aplicar la radiación cuando corresponda (i.e una vez al día en los dias q ' \
-    'corresponde)'
 
      #### Flujo del siguiente bloque de código:
         # Se irradia a las 00hrs del día 1 - cambia T, L, I
@@ -131,8 +125,12 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
 
     largo_t_aux = 0
 
+    # si el array del tiempo viene desordenado:
+    t.sort()
+
     for iteraciones in range(int(t[-1]) + 1):
         # Deben haber tantos ciclos de este for como días deban pasar.
+        # tomo el último n° del array y le saco la parte entera.
             # obs: dias == cant de veces q se aplica rad =! veces q se resuelven ODE's
 
         # obs jiji
@@ -152,6 +150,10 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
                 # enteros, por lo q deberemos procurar obtener todas esas soluciones de las ODE,
                 # i.e. todas las soluciones de las ODE durante un día, antes de pasar al siguiente
                 # dia y volver a aplicar la radiación a las 00hrs.
+
+                    ## ¡¡ IMPORTANTE !!
+                    # Lo anterior me debería asegurar que se aplica radiación
+                    # solo UNA vez y a las 00hrs
 
                 p.dosis_pendientes-=1
 
@@ -211,11 +213,13 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
                      # (solve_ivp arroja muchas cosas cmo un reporte general "sol.y")
 
 
-                if iteraciones == 0:
+                #Funciona para data (arrays del t) de !=s largos :)
+                if iteraciones == 0 or len(sol_y) == 0:
                     sol_y = np.array([ sol.y[0][0], sol.y[1][0], sol.y[2][0], sol.y[3][0] ])
-                elif iteraciones > 0:
+                elif len(sol_y) != 0:
                     sol_y = np.vstack( (sol_y,
-                                        np.array([sol.y[0][0], sol.y[1][0], sol.y[2][0], sol.y[3][0]])) )
+                                        np.array([sol.y[0][0], sol.y[1][0],
+                                                  sol.y[2][0], sol.y[3][0]])) )
                         # np.vstack concatena arrays en vertical sin juntarnos en un solo arrays,
                         # q es lo q hace "append"
 
@@ -231,14 +235,17 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
 
 
                 # T,L,M,I: Actualizar CI para sgte iteración
-                T, = sol.y[0]     #T,L = (T,L) 'Tupla'; Si [a,b] => T,L = [a,b] es T = a y L = b
+                T, = sol.y[0]    #T,L = (T,L) 'Tupla'; Si [a,b] => T,L = [a,b] es T = a y L = b
                 L, = sol.y[1]
                 M, = sol.y[2]
-                I = sol.y[3][0]   #Dos formas distintas de extraer el número del array d 1d que devuelve.
+                I = sol.y[3][0]  #Dos formas distintas de extraer el n° del array d 1d que devuelve.
                                 # i.e. xq una tupla de un elemento necesita la coma tipo A,
 
                 # Obs: En el caso de RAD, se actualizan las nuevas C.I. al resolver
                 # las ecs. de rad.
+
+        #print(f'iteración {iteraciones}')
+        #print(f'sol_y {sol_y}')
 
         dia_actual += 1 # para que en el siguiente intervalo se evalue en el día siguente
 
