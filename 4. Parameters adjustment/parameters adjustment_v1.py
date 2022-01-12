@@ -41,6 +41,8 @@ import parametros as p
 
 
 def residuo(parametros, t, data):
+    p.i += 1
+    print(f'llamados a fx residuo: {p.i}')
     # todo uso de args acá.
     '''Calcula el residuo entre la data (datos empíricos) con los resultados
     que entrega la simulación de ODE en los t que se tiene para la data.
@@ -76,8 +78,13 @@ def residuo(parametros, t, data):
     # el residuo entre el conteo empírico de los L y los resultados de ese conteo de L
     # que obtuve con las ODEs
     modelo_para_L = modelo[:, 1]
+
+    print(f'-- > modelo_para_L: {modelo_para_L}')
+    print("\n")
         # Esto recorre cada elemento ":" del array y va extrayendo el elemento
         # en pos 1 ",1" (q es dnd están los linfocitos)
+
+
 
     #return (modelo_para_L - data).ravel()
     # Calcula el residuo entre actual and fitted data
@@ -117,11 +124,16 @@ v_parametros.add('I0', value = p.I, vary = False)
 
 # Además:
 # Añadimos los parámetros a ajustar EN ESTE CICLO (i.e. vamos a encontrar su valor)
-v_parametros.add('omega_2', value = 0.003, min=10 **(-3), max=10)
-v_parametros.add('omega_3', value = 0.009, min=10 **(-3), max=10)
-v_parametros.add('g', value = 7.33 * 10** 10 , min=10 ** 8, max=10 ** 14)
-v_parametros.add('s', value = 1.47 * 10 ** 8, min=0, max=10 ** 14) # P. restricciones las inventé
-v_parametros.add('omega_1', value = 0.119, min=10 **(-3), max=10) # se volverá a ajustar cn GRID SEARCH
+    # Todas las restricciones se obtuvieron de "Table 1" paper HCC Sung
+v_parametros.add('omega_2', value = 0.003, min=10 **(-3), max=1)
+v_parametros.add('omega_3', value = 0.009, min=10 **(-3), max=1)
+v_parametros.add('g', value = 7.33 * 10 ** 10 , min=10 ** 8, max=10 ** 14)
+v_parametros.add('s', value = 1.3 * 10 ** 8, min=0, max=5.61 * 10 ** 19)
+v_parametros.add('omega_1', value = 0.119, min=10 **(-3), max=1) # se volverá a ajustar cn GRID SEARCH
+v_parametros.add('alpha_L', value = 0.737, min=10 ** (-2), max=0)
+
+# Añadimos alpha_T como un valor FIXED
+v_parametros.add('alpha_T', value = p.alpha_T, vary = False) # se ajustará cn GRID SEARCH
 
 
 ## FLUJO
@@ -208,6 +220,21 @@ plt.show()
 
 
 
+## Gráficos normalizados:
+
+# Gráfico Data
+plt.figure() # -> ? NO SÉ K HACE ESTO
+plt.scatter(t_medido, y_medido_L, marker='o', color='b', label='measured data', s= 30)
+
+
+# Plot fitted data
+fitted_data_normalizada = fitted_data[:, 1] / p.L
+plt.plot(t_medido, fitted_data_normalizada, '-', linewidth=2, color='red', label='fitted data')
+plt.legend()
+
+
+## Show plots
+plt.show()
 
 
 

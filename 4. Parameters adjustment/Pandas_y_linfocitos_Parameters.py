@@ -26,7 +26,7 @@ def main(): #yo practicando con pandas :)
     return
 
 
-def rad_linfo(name_excel,cols,Ln):
+def rad_linfo(name_excel,cols,Ln, alpha_L):
     '''El único cambio con r/Pandas_y_linfocitos.py es el valor de alpha_L'''
 
     #cols: lista con n° columnas del excel a extraer (inicia con 0)
@@ -37,7 +37,7 @@ def rad_linfo(name_excel,cols,Ln):
         # dejar alpha_L con un valor un poco mayor o igual a alpha_T
             # mjr igual al ppio.
 
-    alpha_L = .737 # todo
+    print()
     Lnplusone = 0
     Lrkill = pd.read_excel(name_excel, sheet_name = 1) #abrir excel, página 1 (cuenta desde 0)
     df = pd.DataFrame(Lrkill) # Formato para trabajar cn los datos
@@ -80,7 +80,7 @@ def rad_linfo(name_excel,cols,Ln):
                                 #se ponderó *10 para asemejar a curva del paper.
             #dvh_linfo_rkill.loc[i][1] extraigo segundo elemento '[1]' de la fila 'i'
 
-        L_aux = Lni * np.exp( -alpha_L * DLi )
+        L_aux = Lni * np.exp( - alpha_L * DLi )
 
 
         Lnplusone += L_aux

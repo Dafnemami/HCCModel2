@@ -8,7 +8,7 @@ from cargar_datos_pacientes import cargar_datos_pacientes
 #                 VERSIÓN N°1 (2DA)                     #
 #########################################################
 
-
+i = 0
 
 ##################################################################
 ######## CONDICIONES INICIALES Y PARÁMETROS ODE's + RAD ##########
@@ -46,9 +46,10 @@ I = 0                 # T deaths = 0 at the beginning
 
 # T, I
     # todo
-alpha_T = .139  ##[Gy**-1] #tumor-LQ(linear quadratic) cell kill
-    # P. Este valor no debería estar acá, sino q como un parametros en dict
-    # v_parametros de la clase Parameters
+alpha_T = .037  ##[Gy**-1] #tumor-LQ(linear quadratic) cell kill
+    # este valor solo se ocupa para definir al "beta_T" y definir el valor
+    # del "alpha_T" que va en "v_parametros". Pero en el flujo, se ocupa este último
+    # y no directamente esta variable de acá.
 
 beta_T = alpha_T/14.3  ##[Gy**-2]
 

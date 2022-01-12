@@ -46,10 +46,11 @@ def rhs(t, y, parametros): # right hand side of the ode
             #  Quizá los "patters of faliure" me puedan ser útiles para ajustar alpha_T
             ########################################
 
-        # alpha_L se busca con grid search
+        # alpha_T se busca con grid search
+        # alpha_L se ocupa solo en la rad
 
     except KeyError: # uso incorrecto o inválido de llaves (keys) en diccionarios
-        omega_2, omega_3, g, s, omega_1, alpha_T = parametros
+        omega_2, omega_3, g, s, omega_1 = parametros
 
 
     # ODE's -> S/RADIACIÓN
@@ -123,19 +124,43 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
             # obj: ODE se evalua en los t que la data recibida del paciente
                 # P/? - operación módulo seguirá funcionando correctamente?
 
-    largo_t_aux = 0
+
+    #largo_t_aux = 0
+
 
     # si el array del tiempo viene desordenado:
     t.sort()
 
+
+    # parámetros a ajustar/ocupar en la rad
+    try:
+        alpha_L = parametros['alpha_L'].value
+        alpha_T = parametros['alpha_T'].value
+        print(f'alphas _T: {alpha_T} ; _L: {alpha_L}')
+    except KeyError: # uso incorrecto o inválido de llaves (keys) en diccionarios
+        omega_2, omega_3, g, s, omega_1, alpha_L, alpha_T = parametros
+
+
     for iteraciones in range(int(t[-1]) + 1):
+        #print(f'iteraciones {iteraciones}')
         # Deben haber tantos ciclos de este for como días deban pasar.
         # tomo el último n° del array y le saco la parte entera.
             # obs: dias == cant de veces q se aplica rad =! veces q se resuelven ODE's
 
-        # obs jiji
-        ## acepté no más q  el range necesitaba "+1" para completar todos los días,
-        ## pero no lo pensé más alla.
+        ###############################################################################
+        ## FLUJO "for + range(+1)"
+
+        # dia_actual == 0, iteraciones valor inicial == 0
+        # Comienza buscando tiempos en que evaluar las edo que correspondan al
+        # dia 0, i.e. tiempos en el array "t_medido" que llega que empiecen con cero
+
+        # Al final, para que efectivamente evalue lo que ocurre el último día,
+        # 293 por ejemplo, es necesario que "range" del "for" anterior lleve un "+1"
+        # de lo contrario no evalua en las odes los tiempos asociados al dia 293.
+
+        # En otras palabras, evaluamos t[-1] + 1 días, pues el dia 0,
+        # es realmente el primer día
+        ###############################################################################
 
         # SECCIÓN: RADIATION KILL'S RESOLUTION PER TYPE OF CELL
 
@@ -155,15 +180,15 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
                     # Lo anterior me debería asegurar que se aplica radiación
                     # solo UNA vez y a las 00hrs
 
-                p.dosis_pendientes-=1
+                p.dosis_pendientes-=1 # Se van descontando bn ;)
 
                 # I produced by rkill
-                I = I + T * (1 - np.exp(- p.alpha_T * p.D_T - p.beta_T * p.D_T ** 2))
+                I = I + T * (1 - np.exp(- alpha_T * p.D_T - p.beta_T * p.D_T ** 2))
                 # T alive after rkill
-                T = T * np.exp(- p.alpha_T * p.D_T - p.beta_T * p.D_T ** 2)
+                T = T * np.exp(- alpha_T * p.D_T - p.beta_T * p.D_T ** 2)
 
                 # L alive after rkill
-                L = rad_linfo('DVH acumulado - pares x,y.xlsx', [0,1], L)
+                L = rad_linfo('DVH acumulado - pares x,y.xlsx', [0,1], L, alpha_L)
                     #TOMANDO Linicial como L dsp de una iteración EDO (con s=0), se comprobó
                     # que este valor es correcto dsp de la primera radiación.
 
@@ -179,12 +204,13 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
         v_array_t_eval = crear_array_t_eval(dia_actual, t)
         #print(f'iteración n°: {iteraciones}')
         #print(f'v_array_eval: {v_array_t_eval}')
-        largo_t_aux += len(v_array_t_eval)
+
+        #largo_t_aux += len(v_array_t_eval)
         #print(f'largo_t_aux: {largo_t_aux}')
 
         ## Sobre el por qué del siguiente FLUJO:
         # Obs: Hay veces que ocurrirá que no hay datos empíricos sobre un día en pclar
-        # En estos casos debemos aplicar radiación al paciente mas no resolver las ODE's
+        # En estos casos debemos aplicar radiación al paciente más no resolver las ODE's
         # ni guardar aquellos resultados en los arrays
 
 
@@ -192,6 +218,7 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
 
             for t_a_evaluar in v_array_t_eval:
                 #print(f'im in "for t_evaluar"')
+
 
                 y0 = np.array([T, L, M, I])  # Condiciones iniciales
                 # La fx recibe y0, pero no me sirven xq son antes de pasar por la rad.
@@ -213,8 +240,13 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
                      # (solve_ivp arroja muchas cosas cmo un reporte general "sol.y")
 
 
-                #Funciona para data (arrays del t) de !=s largos :)
-                if iteraciones == 0 or len(sol_y) == 0:
+                #Funciona para data (arrays del t) de !=s largos :) 100% comprobado
+                if len(sol_y) == 0:
+                    # obs:
+                    # Antes este if era "iteraciones==0 and len(sol_y) == 0"
+                    # pero eso provocaba que durante la iteración cero, donde dia_actual ==0
+                    # si había más de un tiempo que evaluar, solo se guardara el último
+                    # pues siempre entraba a este "if" y no al "elif" de acá abajo
                     sol_y = np.array([ sol.y[0][0], sol.y[1][0], sol.y[2][0], sol.y[3][0] ])
                 elif len(sol_y) != 0:
                     sol_y = np.vstack( (sol_y,
@@ -249,7 +281,7 @@ def emulador_odeint(t: np.array, y0, parametros): # y(t)
 
         dia_actual += 1 # para que en el siguiente intervalo se evalue en el día siguente
 
-    #print(f'len(sol_y: {len(sol_y)}')
+    #print(f'len(sol_y): {len(sol_y)}')
 
     return sol_y
 
