@@ -4,7 +4,9 @@ from lmfit import minimize, Parameters, report_fit
 from cargar_datos_pacientes import cargar_datos_pacientes
 from ODEs_y_rad_v3_Parameters import emulador_odeint
 import parametros as p
+import time
 
+start_time = time.time()
 
 #########################################################
 #               AJUSTE PARÁMETROS HCC                   #
@@ -40,10 +42,9 @@ import parametros as p
     ## q sospecho puede ser con el uso de los "patters of faliure"
 
 
-def residuo(parametros, t, data):
+def residuo(parametros, *args):
     p.i += 1
     print(f'llamados a fx residuo: {p.i}')
-    # todo uso de args acá.
     '''Calcula el residuo entre la data (datos empíricos) con los resultados
     que entrega la simulación de ODE en los t que se tiene para la data.
     El residuo lo retorna como un array, x medio de la fx ".ravel()",
@@ -52,18 +53,15 @@ def residuo(parametros, t, data):
     Obs sobre el flujo: La minimización del residuo, y plt el ajuste de parámetros,
     se realiza con la fx "minimize()" del módulo lmfit'''
 
-
-    # todo: cdo tga la respuesta sobre el uso de los "patters of failure" #1.1
-    # cambiar el nombre del parámetro "parametros" aquí, en rhs y en emulador_odeint
-    # por "parametros_no_rad" para señalas que son todos los parámetros a ajustar
-    # excepto alpha_T & alpha_L
-
+    t, data = args
 
     ## FLUJO:
     # Le entrego los valores iniciales como objeto Parameters fijo (fixed value)
     y0 = parametros['T0'].value, parametros['L0'].value, parametros['M0'].value, \
          parametros['I0'].value
 
+    print(f'estoy en residuio')
+    print(f'y0 residuo: {y0}')
 
     ## FLUJO:
     # Defino el modelo matemático de los datos (antes: f(x) = x**2 por ejemplo. ahora: ODE's)
@@ -80,18 +78,16 @@ def residuo(parametros, t, data):
     modelo_para_L = modelo[:, 1]
 
     print(f'-- > modelo_para_L: {modelo_para_L}')
-    print("\n")
+    #print("\n")
         # Esto recorre cada elemento ":" del array y va extrayendo el elemento
         # en pos 1 ",1" (q es dnd están los linfocitos)
 
 
-
-    #return (modelo_para_L - data).ravel()
     # Calcula el residuo entre actual and fitted data
-    ## SOBRE .ravel()
-    # ravel flattens the result between data and simulations's output
-        # i.e. it forces to being in 1D
-    return ( (modelo_para_L - data) ** 2 ).ravel() #todo: minimiza cuadrado de la diferencia
+        ## SOBRE .ravel()
+        # ravel flattens the result between data and simulations's output
+            # i.e. it forces to being in 1D
+    return (modelo_para_L - data ).ravel()
 
 
 
@@ -100,6 +96,7 @@ def residuo(parametros, t, data):
 t_medido, y_medido_L = cargar_datos_pacientes("Sung figs 3 digitalized points.xlsx")
     # datos fueron obtenidos a través de la digitalización de la curva azul de la figura
     # 3b del paper HCC-Sung et al.
+#print(f't_medido: {t_medido}')
 
     # Eventualmente acá se leerán los datos de pacientes con HCC del Centro de Cancer UC
     # Data centro de cancer UC -> PENDIENTE -> Cir.L levels in blood during & after radiothe.
@@ -128,9 +125,11 @@ v_parametros.add('I0', value = p.I, vary = False)
 v_parametros.add('omega_2', value = 0.003, min=10 **(-3), max=1)
 v_parametros.add('omega_3', value = 0.009, min=10 **(-3), max=1)
 v_parametros.add('g', value = 7.33 * 10 ** 10 , min=10 ** 8, max=10 ** 14)
-v_parametros.add('s', value = 1.3 * 10 ** 8, min=0, max=5.61 * 10 ** 19)
-v_parametros.add('omega_1', value = 0.119, min=10 **(-3), max=1) # se volverá a ajustar cn GRID SEARCH
-v_parametros.add('alpha_L', value = 0.737, min=10 ** (-2), max=0)
+v_parametros.add('s', value = 1.47 * 10 ** 8, min=0, max=5.61 * 10 ** 9)
+v_parametros.add('omega_1', value = 0.119, min=10 **(-8), max=1) # se volverá a ajustar cn GRID SEARCH
+v_parametros.add('alpha_L', value = 0.737, min=10 ** (-2), max=1)
+
+# todo: bajar el valor de min. -- listo
 
 # Añadimos alpha_T como un valor FIXED
 v_parametros.add('alpha_T', value = p.alpha_T, vary = False) # se ajustará cn GRID SEARCH
@@ -147,7 +146,10 @@ v_parametros.add('alpha_T', value = p.alpha_T, vary = False) # se ajustará cn G
             # En nuestro caso "powell"
 
 resultado = minimize(residuo, v_parametros,
-                     args=(t_medido, y_medido_L_no_normalizado), method='powell')
+                     args=(t_medido, y_medido_L_no_normalizado), method='leastsq')
+# todo: agregar tolerancia a minimize q controles cant. de iteraciones
+
+
     # obs: minimizer retorna un objeto de clase MiniizerResult
     # obs: "residuo" == Objective function to be minimized
     # obs: "args" == Positional arguments to pass to objetive fx "residuo"
@@ -187,6 +189,13 @@ y0 = np.array([p.T, p.L, p.M, p.I])
 fitted_data = emulador_odeint(t_medido, y0, resultado.params)
 print(f'fitted data: Resultados para L')
 print(fitted_data[:, 1])
+
+print(f'resultado params: {resultado.params}')
+
+
+# print(f'resultado.params: {resultado.params}')
+
+
         # obs: minimizer retorna un objeto de clase MiniizerResult...
         # y para obtener los parámetros debemos llamar a su atributo "params"
 
@@ -213,9 +222,16 @@ plt.scatter(t_medido, y_medido_L_no_normalizado, marker='o', color='b', label='m
 # Plot fitted data
 plt.plot(t_medido, fitted_data[:, 1], '-', linewidth=2, color='red', label='fitted data')
 plt.legend()
+plt.title('parameters_adjustment_v1 resultado')
+
+plt.grid()
 
 ## Show plots
 plt.show()
+
+# todo: probar esto
+##Muestra en consola el tiempo de ejecución del programa
+print("--- %s seconds ---" % (time.time() - start_time))
 
 
 
@@ -231,10 +247,12 @@ plt.scatter(t_medido, y_medido_L, marker='o', color='b', label='measured data', 
 fitted_data_normalizada = fitted_data[:, 1] / p.L
 plt.plot(t_medido, fitted_data_normalizada, '-', linewidth=2, color='red', label='fitted data')
 plt.legend()
+plt.title('parameters_adjustment_v1 resultado NORMALIZADO')
 
 
 ## Show plots
 plt.show()
+
 
 
 
